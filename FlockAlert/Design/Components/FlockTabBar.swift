@@ -11,7 +11,7 @@ struct FlockTabBar: View {
                 TabBarButton(tab: .alerts, selectedTab: $selectedTab, badge: alertBadge > 0 ? alertBadge : nil)
                 TabBarButton(tab: .report, selectedTab: $selectedTab)
                 TabBarButton(tab: .learn, selectedTab: $selectedTab)
-                TabBarButton(tab: .settings, selectedTab: $selectedTab)
+                TabBarButton(tab: .profile, selectedTab: $selectedTab)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 10)
@@ -33,7 +33,7 @@ struct TabBarButton: View {
         case .alerts:   return isSelected ? "bell.badge.fill" : "bell"
         case .report:   return isSelected ? "camera.badge.plus" : "camera.badge.plus"
         case .learn:    return isSelected ? "book.fill" : "book"
-        case .settings: return isSelected ? "gearshape.fill" : "gearshape"
+        case .profile:  return isSelected ? "person.fill" : "person"
         }
     }
 
@@ -43,7 +43,7 @@ struct TabBarButton: View {
         case .alerts:   return "Alerts"
         case .report:   return "Report"
         case .learn:    return "Learn"
-        case .settings: return "Settings"
+        case .profile:  return "Profile"
         }
     }
 

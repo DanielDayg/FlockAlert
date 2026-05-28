@@ -19,8 +19,8 @@ struct ContentView: View {
                 LearnView()
                     .tag(Tab.learn)
 
-                SettingsView()
-                    .tag(Tab.settings)
+                ProfileView()
+                    .tag(Tab.profile)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .ignoresSafeArea()

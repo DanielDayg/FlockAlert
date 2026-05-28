@@ -1,8 +1,10 @@
 import SwiftUI
 import SwiftData
+import RevenueCatUI
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.modelContext) private var modelContext
     @Query private var cameras: [Camera]
     @Query private var reports: [CameraReport]
@@ -11,6 +13,8 @@ struct SettingsView: View {
     @State private var showDisclaimer = false
     @State private var showAbout = false
     @State private var showClearConfirm = false
+    @State private var showPaywall = false
+    @State private var showCustomerCenter = false
 
     let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
@@ -20,6 +24,62 @@ struct SettingsView: View {
                 Color.flockBG.ignoresSafeArea()
 
                 List {
+                    // ── Pro Banner ───────────────────────────────────
+                    if !subscriptionManager.isPro {
+                        Section {
+                            Button { showPaywall = true } label: {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.flockPrimary.opacity(0.15))
+                                            .frame(width: 40, height: 40)
+                                        Image(systemName: "bolt.shield.fill")
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(Color.flockPrimary)
+                                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Upgrade to Pro")
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundStyle(Color.flockPrimary)
+                                        Text("Voice alerts, bird chirp & in-view detection")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(Color.flockTextSub)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(Color.flockTextSub)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.flockPrimary.opacity(0.08))
+                        }
+                    } else {
+                        Section {
+                            // Active badge
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundStyle(Color.flockSafe)
+                                Text("Flock Alert Pro — Active")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Color.flockSafe)
+                                Spacer()
+                            }
+                            .listRowBackground(Color.flockSafe.opacity(0.08))
+
+                            // Manage subscription via Customer Center
+                            Button { showCustomerCenter = true } label: {
+                                SettingsRow(
+                                    icon: "person.crop.circle.badge.checkmark",
+                                    label: "Manage Subscription",
+                                    sub: "Billing, cancellation & support",
+                                    color: .flockSafe
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
                     // ── Status Card ──────────────────────────────────
                     Section {
                         StatusCard(
@@ -118,6 +178,8 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
         }
+        .sheet(isPresented: $showPaywall) { ProPaywallView().environmentObject(subscriptionManager) }
+        .sheet(isPresented: $showCustomerCenter) { CustomerCenterView() }
         .sheet(isPresented: $showPrivacyPolicy) { PrivacyPolicyView() }
         .sheet(isPresented: $showDisclaimer) { DisclaimerView() }
         .sheet(isPresented: $showAbout) { AboutView() }

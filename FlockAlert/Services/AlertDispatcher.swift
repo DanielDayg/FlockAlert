@@ -2,76 +2,125 @@ import UserNotifications
 import AVFoundation
 import UIKit
 
+@MainActor
 final class AlertDispatcher {
-    private let synthesizer = AVSpeechSynthesizer()
-    private var cooldowns: [UUID: Date] = [:]
-    private let cooldownInterval: TimeInterval = 120  // 2 min between repeat alerts for same camera
 
-    func dispatch(camera: Camera, distance: Double, mode: AlertMode, voice: Bool) {
-        // Debounce — don't re-alert the same camera within cooldown window
-        if let last = cooldowns[camera.id], Date().timeIntervalSince(last) < cooldownInterval {
-            return
+    private let chirpPlayer = BirdChirpPlayer()
+    private let synthesizer = AVSpeechSynthesizer()
+
+    // Separate cooldowns so approach + in-view can each fire once per pass
+    private var approachCooldowns: [UUID: Date] = [:]
+    private var inViewCooldowns:   [UUID: Date] = [:]
+    private let approachCooldown: TimeInterval = 90   // 1.5 min per camera
+    private let inViewCooldown:   TimeInterval = 120  // 2 min per camera
+
+    // MARK: - Stage 1: Camera Approaching (~500 ft out)
+
+    func dispatchApproach(camera: Camera, distance: Double, mode: AlertMode, voice: Bool) {
+        guard !onCooldown(camera: camera, cooldowns: &approachCooldowns, interval: approachCooldown)
+        else { return }
+        stamp(camera: camera, in: &approachCooldowns)
+
+        // Bird chirp + voice are Pro-only features
+        let isPro = SubscriptionManager.shared.isPro
+        if isPro && mode != .silent && mode != .hapticOnly {
+            chirpPlayer.chirp()
         }
-        cooldowns[camera.id] = Date()
 
         switch mode {
-        case .banner:
-            sendNotification(camera: camera, distance: distance)
+        case .banner, .voice:
+            sendApproachNotification(camera: camera, distance: distance)
+            if isPro && mode == .voice && voice { speakApproach(camera: camera, distance: distance) }
             HapticManager.notification(.warning)
         case .silent:
             HapticManager.notification(.warning)
         case .hapticOnly:
-            HapticManager.impact(.heavy)
-        case .voice:
-            sendNotification(camera: camera, distance: distance)
-            if voice { speakAlert(camera: camera, distance: distance) }
+            HapticManager.impact(.medium)
         }
     }
 
-    // MARK: - Push Notification
+    // MARK: - Stage 2: In Camera View — Pro only
 
-    private func sendNotification(camera: Camera, distance: Double) {
+    func dispatchInView(camera: Camera, mode: AlertMode, voice: Bool) {
+        guard SubscriptionManager.shared.isPro else { return }   // Pro feature
+        guard !onCooldown(camera: camera, cooldowns: &inViewCooldowns, interval: inViewCooldown)
+        else { return }
+        stamp(camera: camera, in: &inViewCooldowns)
+
+        switch mode {
+        case .banner, .voice:
+            sendInViewNotification(camera: camera)
+            if mode == .voice && voice { speakInView(camera: camera) }
+            HapticManager.impact(.heavy)
+        case .silent:
+            HapticManager.impact(.heavy)
+        case .hapticOnly:
+            HapticManager.impact(.heavy)
+        }
+    }
+
+    // MARK: - Notifications
+
+    private func sendApproachNotification(camera: Camera, distance: Double) {
+        let ft = Int(distance * 3.281)
         let content = UNMutableNotificationContent()
-        content.title = "Surveillance Camera Ahead"
-        content.body = buildBody(camera: camera, distance: distance)
+        content.title = "🚨 Flock Camera Ahead"
+        content.body  = "Active ALPR in \(ft) ft · \(camera.ownerLabel)"
         content.sound = .default
-        content.categoryIdentifier = "CAMERA_ALERT"
-        content.userInfo = ["cameraID": camera.id.uuidString]
+        content.categoryIdentifier  = "CAMERA_APPROACH"
+        content.interruptionLevel   = .timeSensitive
+        content.userInfo = ["cameraID": camera.id.uuidString, "stage": "approach"]
+        deliver(content, id: "approach-\(camera.id)-\(Int(Date().timeIntervalSince1970))")
+    }
 
-        // Attach owner color as interruption level hint
-        content.interruptionLevel = .timeSensitive
+    private func sendInViewNotification(camera: Camera) {
+        let content = UNMutableNotificationContent()
+        content.title = "⚠️ You Are In Camera View"
+        content.body  = "\(camera.ownerLabel) ALPR is scanning your plate now"
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("default"))
+        content.categoryIdentifier  = "CAMERA_IN_VIEW"
+        content.interruptionLevel   = .critical   // breaks through focus modes
+        content.userInfo = ["cameraID": camera.id.uuidString, "stage": "inView"]
+        deliver(content, id: "inview-\(camera.id)-\(Int(Date().timeIntervalSince1970))")
+    }
 
-        let request = UNNotificationRequest(
-            identifier: "cam-\(camera.id.uuidString)-\(Int(Date().timeIntervalSince1970))",
-            content: content,
-            trigger: nil   // deliver immediately
-        )
+    private func deliver(_ content: UNMutableNotificationContent, id: String) {
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
 
-    private func buildBody(camera: Camera, distance: Double) -> String {
-        let ft = Int(distance * 3.281)
-        let owner = camera.ownerLabel
-        return "Active ALPR zone in \(ft) ft · \(owner)"
+    // MARK: - Voice
+
+    private func speakApproach(camera: Camera, distance: Double) {
+        let ft    = Int(distance * 3.281)
+        let owner = camera.ownerName ?? "Flock Safety"
+        speak("Flock camera ahead in \(ft) feet. \(owner).")
     }
 
-    // MARK: - Voice Alert (CarPlay / driving mode)
+    private func speakInView(camera: Camera) {
+        speak("Warning. You are now in camera view.")
+    }
 
-    private func speakAlert(camera: Camera, distance: Double) {
-        let ft = Int(distance * 3.281)
-        let owner = camera.ownerName ?? camera.ownerType.rawValue
-        let text = "Flock camera in \(ft) feet. \(owner)."
-
-        let utterance = AVSpeechUtterance(string: text)
-        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = 0.48
-        utterance.volume = 0.9
-        utterance.pitchMultiplier = 1.0
-
-        // Duck audio briefly
+    private func speak(_ text: String) {
         try? AVAudioSession.sharedInstance().setCategory(.playback, options: .duckOthers)
         try? AVAudioSession.sharedInstance().setActive(true)
+        let u = AVSpeechUtterance(string: text)
+        u.voice            = AVSpeechSynthesisVoice(language: "en-US")
+        u.rate             = 0.48
+        u.volume           = 0.95
+        u.pitchMultiplier  = 1.0
+        synthesizer.stopSpeaking(at: .immediate)
+        synthesizer.speak(u)
+    }
 
-        synthesizer.speak(utterance)
+    // MARK: - Cooldown Helpers
+
+    private func onCooldown(camera: Camera, cooldowns: inout [UUID: Date], interval: TimeInterval) -> Bool {
+        guard let last = cooldowns[camera.id] else { return false }
+        return Date().timeIntervalSince(last) < interval
+    }
+
+    private func stamp(camera: Camera, in cooldowns: inout [UUID: Date]) {
+        cooldowns[camera.id] = Date()
     }
 }

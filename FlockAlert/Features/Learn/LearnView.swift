@@ -44,6 +44,13 @@ struct LearnView: View {
                             .padding(.horizontal, 16)
                         }
 
+                        // ── Cities & Bans ────────────────────────────
+                        NavigationLink(destination: BannedCitiesView()) {
+                            BannedCitiesBanner()
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
+
                         // ── Articles ──────────────────────────────────
                         LazyVStack(spacing: 12) {
                             ForEach(filteredArticles) { article in
@@ -64,6 +71,46 @@ struct LearnView: View {
             .navigationBarTitleDisplayMode(.large)
         }
         .preferredColorScheme(.dark)
+    }
+}
+
+// MARK: - Banned Cities Banner
+
+struct BannedCitiesBanner: View {
+    var body: some View {
+        GlassCard {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.flockSafe.opacity(0.15))
+                        .frame(width: 50, height: 50)
+                    Image(systemName: "xmark.shield.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(Color.flockSafe)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("FLOCK-FREE ZONES")
+                        .font(.system(size: 9, weight: .heavy, design: .monospaced))
+                        .foregroundStyle(Color.flockSafe.opacity(0.8))
+                        .tracking(1.5)
+                    Text("Cities & Bans")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.flockText)
+                    Text("Jurisdictions that have restricted or banned Flock Safety cameras.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.flockTextSub)
+                        .lineLimit(2)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.flockTextSub)
+            }
+            .padding(16)
+        }
     }
 }
 

@@ -1,13 +1,15 @@
 import SwiftUI
 import SwiftData
 import UserNotifications
+import RevenueCat
 
 @main
 struct FlockAlertApp: App {
     @StateObject private var appState = AppState()
+    @StateObject private var subscriptionManager = SubscriptionManager.shared
 
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Camera.self, AlertEvent.self, CameraReport.self])
+        let schema = Schema([Camera.self, AlertEvent.self, CameraReport.self, UserProfile.self, CameraVerification.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [config])
@@ -20,6 +22,8 @@ struct FlockAlertApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                .environmentObject(AuthManager.shared)
+                .environmentObject(subscriptionManager)
                 .preferredColorScheme(.dark)
         }
         .modelContainer(sharedModelContainer)
@@ -28,6 +32,7 @@ struct FlockAlertApp: App {
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
+    @Environment(\.modelContext) private var modelContext
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "onboardingComplete")
 
     var body: some View {
@@ -42,6 +47,10 @@ struct RootView: View {
                 .transition(.opacity)
                 .zIndex(10)
             }
+        }
+        .onAppear {
+            AuthManager.shared.configure(context: modelContext)
+            SubscriptionManager.shared.configure()
         }
         .task {
             await requestNotificationPermission()

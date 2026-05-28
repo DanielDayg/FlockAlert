@@ -22,7 +22,7 @@ final class SyncManager: ObservableObject {
     // MARK: - Seed Data (bundled JSON — loads once on first launch)
 
     private func loadSeedData(context: ModelContext) {
-        let key = "seedDataLoadedV1"
+        let key = "seedDataLoadedV2"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
 
         guard let url = Bundle.main.url(forResource: "SeedCameras", withExtension: "json"),

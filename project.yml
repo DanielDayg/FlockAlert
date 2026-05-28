@@ -1,4 +1,10 @@
 name: FlockAlert
+
+packages:
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios-spm
+    from: "5.0.0"
+
 options:
   bundleIdPrefix: com.flockalert
   deploymentTarget:
@@ -25,6 +31,7 @@ targets:
           - "Resources/Info.plist"
     resources:
       - path: FlockAlert/Resources/SeedCameras.json
+      - path: FlockAlert/Resources/Assets.xcassets
     info:
       path: FlockAlert/Resources/Info.plist
       properties:
@@ -32,7 +39,7 @@ targets:
         CFBundleDisplayName: Flock Alert
         CFBundleIdentifier: com.flockalert.app
         CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "1"
+        CFBundleVersion: "2"
         LSRequiresIPhoneOS: true
         UIRequiredDeviceCapabilities:
           - location-services
@@ -46,6 +53,14 @@ targets:
         NSCameraUsageDescription: "Take photos of cameras when submitting community reports to help verify locations."
         NSPhotoLibraryUsageDescription: "Select photos from your library to attach to camera reports."
         NSMicrophoneUsageDescription: "Accessed as part of camera functionality when taking report photos."
+        CFBundleIconName: AppIcon
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
@@ -57,5 +72,12 @@ targets:
         INFOPLIST_FILE: FlockAlert/Resources/Info.plist
         SWIFT_VERSION: "5.9"
         CODE_SIGN_ENTITLEMENTS: FlockAlert/FlockAlert.entitlements
+    dependencies:
+      - package: RevenueCat
+        product: RevenueCat
+      - package: RevenueCat
+        product: RevenueCatUI
     capabilities:
       maps: {}
+      signInWithApple: {}
+      inAppPurchase: {}

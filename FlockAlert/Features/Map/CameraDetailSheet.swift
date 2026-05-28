@@ -6,7 +6,11 @@ struct CameraDetailSheet: View {
     let onDismiss: () -> Void
     let onReport: () -> Void
 
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
+
     @State private var showShareSheet = false
+    @State private var showVerify = false
+    @State private var showPaywall = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -93,15 +97,100 @@ struct CameraDetailSheet: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 16)
 
+                    // ── Community Photos (Pro-gated) ──────────────────
+                    if !camera.photoURLs.isEmpty {
+                        Divider().background(Color.white.opacity(0.08)).padding(.horizontal, 20)
+
+                        if subscriptionManager.isPro {
+                            // Show photos
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("COMMUNITY PHOTOS")
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(Color.flockTextSub)
+                                    .tracking(1.5)
+                                    .padding(.horizontal, 20)
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 10) {
+                                        ForEach(camera.photoURLs, id: \.self) { urlString in
+                                            AsyncImage(url: URL(string: urlString)) { phase in
+                                                switch phase {
+                                                case .success(let image):
+                                                    image
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                case .failure:
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .fill(Color.flockSurface2)
+                                                        .overlay(
+                                                            Image(systemName: "photo.slash")
+                                                                .foregroundStyle(Color.flockTextSub)
+                                                        )
+                                                default:
+                                                    RoundedRectangle(cornerRadius: 10)
+                                                        .fill(Color.flockSurface2)
+                                                        .overlay(ProgressView())
+                                                }
+                                            }
+                                            .frame(width: 160, height: 110)
+                                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                }
+                            }
+                            .padding(.vertical, 14)
+                        } else {
+                            // Locked teaser
+                            Button { showPaywall = true } label: {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.flockPrimary.opacity(0.12))
+                                            .frame(width: 44, height: 44)
+                                        Image(systemName: "photo.stack.fill")
+                                            .font(.system(size: 18, weight: .semibold))
+                                            .foregroundStyle(Color.flockPrimary)
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("\(camera.photoURLs.count) community photo\(camera.photoURLs.count == 1 ? "" : "s")")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundStyle(Color.flockText)
+                                        Text("Unlock with Flock Alert Pro")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(Color.flockPrimary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "lock.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Color.flockPrimary.opacity(0.7))
+                                }
+                                .padding(14)
+                                .background(Color.flockPrimary.opacity(0.07))
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .strokeBorder(Color.flockPrimary.opacity(0.2), lineWidth: 1)
+                                )
+                                .padding(.horizontal, 20)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.vertical, 14)
+                        }
+                    }
+
                     Divider().background(Color.white.opacity(0.08)).padding(.horizontal, 20)
 
                     // ── Actions ──────────────────────────────────────
                     HStack(spacing: 12) {
                         ActionButton(icon: "flag", label: "Report", color: .flockCaution) { onReport() }
+                        ActionButton(icon: "checkmark.shield", label: "Verify", color: .flockSafe) {
+                            showVerify = true
+                        }
                         ActionButton(icon: "square.and.arrow.up", label: "Share", color: .flockPrimary) {
                             showShareSheet = true
                         }
-                        ActionButton(icon: "map", label: "Navigate", color: .flockSafe) {
+                        ActionButton(icon: "map", label: "Navigate", color: .skyBlue) {
                             openInMaps()
                         }
                     }
@@ -125,6 +214,12 @@ struct CameraDetailSheet: View {
         .padding(.bottom, 90)   // above tab bar
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [shareText()])
+        }
+        .sheet(isPresented: $showVerify) {
+            CameraVerifySheet(camera: camera)
+        }
+        .sheet(isPresented: $showPaywall) {
+            ProPaywallView().environmentObject(subscriptionManager)
         }
     }
 

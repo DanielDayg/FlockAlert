@@ -1,65 +1,102 @@
 import CoreLocation
 import Foundation
 
-// Manages up to 20 active CLCircularRegion geofences (iOS system limit).
-// Dynamically re-registers the nearest cameras as the user moves.
+// Two-zone geofencing per camera:
+//   Approach zone  —  3× alertRadius  →  bird chirp + "camera ahead" alert
+//   Inner zone     —  1× alertRadius  →  "in camera view" alert (with FOV check)
+//
+// iOS limits total monitored regions to 20.
+// We track up to 10 cameras × 2 zones = 20 fences.
 
 final class GeofenceManager: NSObject {
+
+    // Callbacks deliver the Camera directly so callers don't need a lookup table
+    var onApproached: ((Camera) -> Void)?
+    var onEntered:    ((Camera) -> Void)?
+    var onExited:     ((Camera) -> Void)?
+
     private let locationManager = CLLocationManager()
-    private let maxFences = 20
+    private let maxCameras = 10   // 10 × 2 zones = 20 fences (iOS limit)
 
-    var onEntered: ((UUID) -> Void)?
-    var onExited: ((UUID) -> Void)?
-
-    private var registeredFences: [String: CLCircularRegion] = [:]  // [UUID string: region]
+    // identifier → Camera (stored so we can pass them back in callbacks)
+    private var cameraByFenceID: [String: Camera] = [:]
 
     override init() {
         super.init()
         locationManager.delegate = self
     }
 
-    // Call this whenever the user's location changes significantly or
-    // after the camera list is refreshed. Pass the nearest N cameras.
+    // Call whenever the nearby camera list changes.
+    // Pass cameras sorted nearest-first; we'll take the first maxCameras.
     func refresh(with cameras: [Camera], radius: CLLocationDistance) {
-        // Unregister all current fences
-        registeredFences.values.forEach { locationManager.stopMonitoring(for: $0) }
-        registeredFences.removeAll()
+        // Stop all current fences
+        for region in locationManager.monitoredRegions {
+            locationManager.stopMonitoring(for: region)
+        }
+        cameraByFenceID.removeAll()
 
-        // Register nearest cameras (up to limit)
-        for camera in cameras.prefix(maxFences) {
-            let identifier = camera.id.uuidString
-            let region = CLCircularRegion(
-                center: camera.coordinate,
-                radius: max(50, radius),   // minimum 50m so we don't miss fast-moving vehicles
-                identifier: identifier
+        let selected = Array(cameras.prefix(maxCameras))
+
+        for camera in selected {
+            let innerR    = max(50,  radius)
+            let approachR = max(150, radius * 3)
+
+            // ── Inner zone ─────────────────────────────────────────
+            let innerID = "inner-\(camera.id)"
+            let inner   = CLCircularRegion(
+                center: camera.coordinate, radius: innerR, identifier: innerID
             )
-            region.notifyOnEntry = true
-            region.notifyOnExit = true
-            locationManager.startMonitoring(for: region)
-            registeredFences[identifier] = region
+            inner.notifyOnEntry = true
+            inner.notifyOnExit  = true
+            locationManager.startMonitoring(for: inner)
+            cameraByFenceID[innerID] = camera
+
+            // ── Approach zone ──────────────────────────────────────
+            let approachID = "approach-\(camera.id)"
+            let approach   = CLCircularRegion(
+                center: camera.coordinate, radius: approachR, identifier: approachID
+            )
+            approach.notifyOnEntry = true
+            approach.notifyOnExit  = false  // no need to callback on exit from approach
+            locationManager.startMonitoring(for: approach)
+            cameraByFenceID[approachID] = camera
         }
     }
 
     func stopAll() {
-        registeredFences.values.forEach { locationManager.stopMonitoring(for: $0) }
-        registeredFences.removeAll()
+        for region in locationManager.monitoredRegions {
+            locationManager.stopMonitoring(for: region)
+        }
+        cameraByFenceID.removeAll()
     }
 }
 
+// MARK: - CLLocationManagerDelegate
+
 extension GeofenceManager: CLLocationManagerDelegate {
+
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        guard let id = UUID(uuidString: region.identifier) else { return }
-        DispatchQueue.main.async { self.onEntered?(id) }
+        guard let camera = cameraByFenceID[region.identifier] else { return }
+
+        DispatchQueue.main.async {
+            if region.identifier.hasPrefix("approach-") {
+                self.onApproached?(camera)
+            } else {
+                self.onEntered?(camera)
+            }
+        }
     }
 
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        guard let id = UUID(uuidString: region.identifier) else { return }
-        DispatchQueue.main.async { self.onExited?(id) }
+        guard region.identifier.hasPrefix("inner-"),
+              let camera = cameraByFenceID[region.identifier]
+        else { return }
+        DispatchQueue.main.async { self.onExited?(camera) }
     }
 
     func locationManager(_ manager: CLLocationManager,
                          monitoringDidFailFor region: CLRegion?,
                          withError error: Error) {
-        // If we exceed system limits, quietly degrade — geofence count is already capped
+        // Silently degrade — count is already capped at the iOS limit
     }
 }

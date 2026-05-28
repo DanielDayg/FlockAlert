@@ -33,7 +33,113 @@ final class AppState: ObservableObject {
     init() {
         bindLocationManager()
         bindSettings()
+        wireGeofenceCallbacks()  // ← critical: connect geofences to alerts
     }
+
+    // MARK: - Geofence Wiring
+
+    private func wireGeofenceCallbacks() {
+        // Stage 1 — Approaching (~3× radius out): bird chirp + "camera ahead" notification
+        geofenceManager.onApproached = { [weak self] camera in
+            guard let self else { return }
+            let dist = self.distanceToNearest ?? self.alertRadiusMetres * 3
+            self.alertDispatcher.dispatchApproach(
+                camera: camera,
+                distance: dist,
+                mode: self.alertMode,
+                voice: self.voiceEnabled
+            )
+            self.unreadAlertCount += 1
+        }
+
+        // Stage 2 — Entered inner radius: check FOV, fire in-view or entered alert
+        geofenceManager.onEntered = { [weak self] camera in
+            guard let self else { return }
+            self.activeAlertCameraIDs.insert(camera.id)
+
+            let inFOV = self.isUserInCameraFOV(camera)
+            if inFOV {
+                // User is actually being scanned right now
+                self.alertDispatcher.dispatchInView(
+                    camera: camera,
+                    mode: self.alertMode,
+                    voice: self.voiceEnabled
+                )
+            } else {
+                // Within range but not directly in the arc — still warn
+                self.alertDispatcher.dispatchApproach(
+                    camera: camera,
+                    distance: self.alertRadiusMetres,
+                    mode: self.alertMode,
+                    voice: self.voiceEnabled
+                )
+            }
+            self.unreadAlertCount += 1
+        }
+
+        geofenceManager.onExited = { [weak self] camera in
+            self?.activeAlertCameraIDs.remove(camera.id)
+        }
+    }
+
+    // MARK: - FOV Check
+
+    /// Returns true if the user is currently inside the camera's field of view arc.
+    func isUserInCameraFOV(_ camera: Camera) -> Bool {
+        guard let facing = camera.facingDirection,
+              let fov    = camera.fieldOfViewDegrees,
+              let userLoc = userLocation
+        else { return false }
+
+        // Bearing FROM camera TO user
+        let bearingCamToUser = CLLocation(latitude: camera.latitude, longitude: camera.longitude)
+            .bearing(to: userLoc.coordinate)
+
+        // Angle between camera's facing direction and line to user
+        let diff = abs(facing - bearingCamToUser).normalised360
+        return diff <= fov / 2.0
+    }
+
+    // MARK: - Nearest Camera Updates (called from MapViewModel proximity check)
+
+    func updateNearestCamera(_ camera: Camera?, distance: Double?) {
+        nearestCamera = camera
+        distanceToNearest = distance
+        if let cam = camera, let dist = distance {
+            visibilityStatus = visibilityLabel(camera: cam, distance: dist)
+        } else {
+            visibilityStatus = "—"
+        }
+    }
+
+    private func visibilityLabel(camera: Camera, distance: Double) -> String {
+        guard let facing = camera.facingDirection,
+              let fov    = camera.fieldOfViewDegrees,
+              let userLoc = userLocation else { return "Unknown" }
+
+        let bearingToCamera = userLoc.bearing(to: camera.coordinate)
+        let relAngle = abs(facing - bearingToCamera).normalised360
+        let halfFOV  = fov / 2.0
+
+        if relAngle < halfFOV * 0.5  { return "HIGH" }
+        if relAngle < halfFOV        { return "LIKELY" }
+        if relAngle < halfFOV * 1.5  { return "POSSIBLE" }
+        return "LOW"
+    }
+
+    // MARK: - Legacy helpers (kept for compatibility)
+
+    func cameraEntered(_ camera: Camera) {
+        // Now handled by geofence callbacks — this is a fallback
+        activeAlertCameraIDs.insert(camera.id)
+        unreadAlertCount += 1
+    }
+
+    func cameraExited(_ camera: Camera) {
+        activeAlertCameraIDs.remove(camera.id)
+    }
+
+    // MARK: - Settings Persistence
 
     private func bindLocationManager() {
         locationManager.$location
@@ -65,57 +171,24 @@ final class AppState: ObservableObject {
             .sink { UserDefaults.standard.set($0, forKey: "voiceEnabled") }
             .store(in: &cancellables)
     }
-
-    func updateNearestCamera(_ camera: Camera?, distance: Double?) {
-        nearestCamera = camera
-        distanceToNearest = distance
-        if let cam = camera, let dist = distance {
-            visibilityStatus = estimateVisibility(camera: cam, distance: dist)
-        } else {
-            visibilityStatus = "—"
-        }
-    }
-
-    private func estimateVisibility(camera: Camera, distance: Double) -> String {
-        guard let facing = camera.facingDirection,
-              let fov = camera.fieldOfViewDegrees,
-              let userLoc = userLocation else { return "Unknown" }
-
-        let bearingToCamera = userLoc.bearing(to: camera.coordinate)
-        let relAngle = abs(facing - bearingToCamera).normalised360
-        let halfFOV = fov / 2.0
-
-        if relAngle < halfFOV * 0.5 { return "HIGH" }
-        if relAngle < halfFOV { return "LIKELY" }
-        if relAngle < halfFOV * 1.5 { return "POSSIBLE" }
-        return "LOW"
-    }
-
-    func cameraEntered(_ camera: Camera) {
-        activeAlertCameraIDs.insert(camera.id)
-        alertDispatcher.dispatch(camera: camera, distance: distanceToNearest ?? alertRadiusMetres, mode: alertMode, voice: voiceEnabled)
-        unreadAlertCount += 1
-    }
-
-    func cameraExited(_ camera: Camera) {
-        activeAlertCameraIDs.remove(camera.id)
-    }
 }
 
-enum Tab: CaseIterable { case map, alerts, report, learn, settings }
+// MARK: - Enums & Extensions
+
+enum Tab: CaseIterable { case map, alerts, report, learn, profile }
 
 enum AlertMode: String, CaseIterable {
-    case banner = "banner"
-    case silent = "silent"
+    case banner     = "banner"
+    case silent     = "silent"
     case hapticOnly = "hapticOnly"
-    case voice = "voice"
+    case voice      = "voice"
 
     var label: String {
         switch self {
-        case .banner: return "Banner + Sound"
-        case .silent: return "Silent + Haptic"
+        case .banner:     return "Banner + Sound"
+        case .silent:     return "Silent + Haptic"
         case .hapticOnly: return "Haptic Only"
-        case .voice: return "Voice Alerts"
+        case .voice:      return "Voice Alerts"
         }
     }
 }

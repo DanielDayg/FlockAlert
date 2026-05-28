@@ -22,6 +22,8 @@ struct MapView: View {
                 MapHeaderBar(
                     cameraCount: viewModel.visibleCameras.count,
                     totalCount: viewModel.totalCameraCount,
+                    visibleInRegion: viewModel.visibleCount,
+                    isClusterMode: viewModel.isClusterMode,
                     syncState: viewModel.syncState,
                     onFilter: { showFilters = true },
                     onToggleStyle: { viewModel.cycleMapStyle() }
@@ -68,18 +70,28 @@ struct MapView: View {
         Map(position: $viewModel.cameraPosition) {
             UserAnnotation()
 
-            ForEach(viewModel.visibleCameras) { camera in
-                Annotation("", coordinate: camera.coordinate, anchor: .center) {
-                    CameraPin(
-                        camera: camera,
-                        isSelected: selectedCamera?.id == camera.id,
-                        isActive: appState.activeAlertCameraIDs.contains(camera.id)
-                    )
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            selectedCamera = (selectedCamera?.id == camera.id) ? nil : camera
+            if viewModel.isClusterMode {
+                // ── City cluster bubbles (zoomed out) ──────────────────
+                ForEach(viewModel.cityClusters) { cluster in
+                    Annotation("", coordinate: cluster.coordinate, anchor: .bottom) {
+                        CityClusterPin(cluster: cluster)
+                    }
+                }
+            } else {
+                // ── Individual camera pins (zoomed in) ─────────────────
+                ForEach(viewModel.visibleCameras) { camera in
+                    Annotation("", coordinate: camera.coordinate, anchor: .center) {
+                        CameraPin(
+                            camera: camera,
+                            isSelected: selectedCamera?.id == camera.id,
+                            isActive: appState.activeAlertCameraIDs.contains(camera.id)
+                        )
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                                selectedCamera = (selectedCamera?.id == camera.id) ? nil : camera
+                            }
+                            HapticManager.impact(.light)
                         }
-                        HapticManager.impact(.light)
                     }
                 }
             }
@@ -116,9 +128,21 @@ struct MapView: View {
 struct MapHeaderBar: View {
     let cameraCount: Int
     let totalCount: Int
+    let visibleInRegion: Int
+    let isClusterMode: Bool
     let syncState: SyncState
     let onFilter: () -> Void
     let onToggleStyle: () -> Void
+
+    private var countLabel: String {
+        if isClusterMode {
+            return "zoom to load"
+        }
+        if visibleInRegion > cameraCount && cameraCount > 0 {
+            return "\(cameraCount) of \(visibleInRegion)"
+        }
+        return "\(cameraCount) shown"
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -142,9 +166,10 @@ struct MapHeaderBar: View {
                     Circle()
                         .fill(syncState == .syncing ? Color.flockCaution : Color.flockSafe)
                         .frame(width: 6, height: 6)
-                    Text("\(cameraCount) visible")
+                    Text(countLabel)
                         .font(.system(size: 12, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color.flockText)
+                        .animation(.none, value: countLabel)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
