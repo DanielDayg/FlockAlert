@@ -1,0 +1,61 @@
+name: FlockAlert
+options:
+  bundleIdPrefix: com.flockalert
+  deploymentTarget:
+    iOS: "17.0"
+  defaultConfig: Debug
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    DEVELOPMENT_TEAM: G2VP9DN2R5
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  FlockAlert:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: FlockAlert
+        excludes:
+          - "Resources/Info.plist"
+    resources:
+      - path: FlockAlert/Resources/SeedCameras.json
+    info:
+      path: FlockAlert/Resources/Info.plist
+      properties:
+        CFBundleName: Flock Alert
+        CFBundleDisplayName: Flock Alert
+        CFBundleIdentifier: com.flockalert.app
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        LSRequiresIPhoneOS: true
+        UIRequiredDeviceCapabilities:
+          - location-services
+          - gps
+        UIBackgroundModes:
+          - location
+          - fetch
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Flock Alert uses your location to alert you as you approach documented surveillance cameras. Your location is never sent to our servers."
+        NSLocationAlwaysUsageDescription: "Flock Alert monitors for nearby surveillance cameras in the background so you can receive alerts while driving."
+        NSLocationWhenInUseUsageDescription: "Flock Alert shows surveillance cameras near your current location."
+        NSCameraUsageDescription: "Take photos of cameras when submitting community reports to help verify locations."
+        NSPhotoLibraryUsageDescription: "Select photos from your library to attach to camera reports."
+        NSMicrophoneUsageDescription: "Accessed as part of camera functionality when taking report photos."
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    entitlements:
+      path: FlockAlert/FlockAlert.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flockalert.app
+        INFOPLIST_FILE: FlockAlert/Resources/Info.plist
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_ENTITLEMENTS: FlockAlert/FlockAlert.entitlements
+    capabilities:
+      maps: {}

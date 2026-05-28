@@ -1,0 +1,521 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0091793945F6F8B259F3C83A /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6961146C3485AD9A8A78A5A /* Camera.swift */; };
+		0F2AA5C4AE3216253C036BAD /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2CD7CD13482061C93AECA2D /* HapticManager.swift */; };
+		1080B7AEA2FD419E7D935BB1 /* GeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCEB09B43AA6463EE39A20C /* GeofenceManager.swift */; };
+		20C974D3BB98A4E451A719D6 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DD936BD6E4ABD8BD3DAF14 /* Theme.swift */; };
+		235E01F4333C2E5026AB3DF1 /* FlockTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82B22C33B436F1D1C8FCEFE7 /* FlockTabBar.swift */; };
+		464CB7A3D82CDDBB2CABC75A /* FlockAlertApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB4B2858AC0585A00D32E04 /* FlockAlertApp.swift */; };
+		4DD604994F1EE6D81CF2113E /* ReportCameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDD1C27303DAEA7811F5CB0 /* ReportCameraView.swift */; };
+		5232C87D00F178092F90A1D2 /* OverpassAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4268C0306608A517E720DA3 /* OverpassAPIClient.swift */; };
+		5C0B990F6DE0C096FB6C2FFA /* FilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED22706990AA6BE3AC2C6E06 /* FilterView.swift */; };
+		5C6F1A3135D06B2DE79C3CF0 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF2C41C3BD68C469DE68BB0 /* MapView.swift */; };
+		5D843CCE60D4B29F67E7056E /* SeedCameras.json in Resources */ = {isa = PBXBuildFile; fileRef = 551FC9D1CA3DFFE4DD52E80E /* SeedCameras.json */; };
+		659BC89AA49947F30D9C1BB1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E0B5025024888ED787FBA7C /* SettingsView.swift */; };
+		678A1E31274746E560A4EA31 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61543DFF53E235DCB2437A0 /* ContentView.swift */; };
+		6932E133DC7F332E9DA024AF /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCB41C57ABD1ED175605F5A /* OnboardingView.swift */; };
+		69969444DF1069D6F7A27DCD /* CameraDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15D5D3AC2AACF10792CDBAB6 /* CameraDetailSheet.swift */; };
+		6BC553DD3DFF5DCE64950753 /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39BFF38195E3B0B1510BAC35 /* AlertSettingsView.swift */; };
+		768A87B32376350A4F1D80D8 /* CameraReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAED6CA04DB450CB630EBD42 /* CameraReport.swift */; };
+		775456F42CF8706A2033A027 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439443F019FFA8E8D3F528AD /* GlassCard.swift */; };
+		91D61650607EEF1003BB2EFC /* CameraPin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F28C136ED1FC2F572805E62 /* CameraPin.swift */; };
+		9FD0330DCF80885352D0BDD0 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50ED8D3664BBDC232F0F1E29 /* SyncManager.swift */; };
+		A73C53EFA6CEF067A3FF7968 /* AlertEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F353D4767A950D8647FC7E09 /* AlertEvent.swift */; };
+		BC03638109830149A2440AA3 /* LearnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7C8D1C705683AE572A95B88 /* LearnView.swift */; };
+		CE3C13F46C113583C5661424 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8CDA60CE5363E0558BFAA6 /* AppState.swift */; };
+		DBFDB6C113E1AE3A06713F0B /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F6D9643B25B278B7784A0E /* ArticleView.swift */; };
+		DDFB9E4D92DF432B55D9239F /* LearnContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E3A6A4BA9300CE63051BD88 /* LearnContent.swift */; };
+		EA576124C6AA211D4EF55142 /* AlertDispatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5E8574F2B74DDCFE61137DB /* AlertDispatcher.swift */; };
+		ED1DF6AFFAD4D19DC42908BE /* ProximityBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9631BF00F393B25FB7E197BA /* ProximityBannerView.swift */; };
+		EE5B1A446FFE6E3C3D2B13A9 /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E9A13CC44F941052832C78F /* MapViewModel.swift */; };
+		FBBD8B2F28F987F3CB850A46 /* AlertsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B06DFBD338264A54A80E8591 /* AlertsView.swift */; };
+		FC6830ACF7B7FB3381DE4C61 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A32918724CCC32796F1054 /* LocationManager.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		15D5D3AC2AACF10792CDBAB6 /* CameraDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraDetailSheet.swift; sourceTree = "<group>"; };
+		1DCEB09B43AA6463EE39A20C /* GeofenceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeofenceManager.swift; sourceTree = "<group>"; };
+		34A32918724CCC32796F1054 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		39BFF38195E3B0B1510BAC35 /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
+		3E0B5025024888ED787FBA7C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3F28C136ED1FC2F572805E62 /* CameraPin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPin.swift; sourceTree = "<group>"; };
+		439443F019FFA8E8D3F528AD /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		50ED8D3664BBDC232F0F1E29 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
+		551FC9D1CA3DFFE4DD52E80E /* SeedCameras.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = SeedCameras.json; sourceTree = "<group>"; };
+		58549C770178EF2C0A04A5C3 /* FlockAlert.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FlockAlert.entitlements; sourceTree = "<group>"; };
+		5EF2C41C3BD68C469DE68BB0 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		6E9A13CC44F941052832C78F /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
+		7F8CDA60CE5363E0558BFAA6 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		82B22C33B436F1D1C8FCEFE7 /* FlockTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlockTabBar.swift; sourceTree = "<group>"; };
+		83F6D9643B25B278B7784A0E /* ArticleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArticleView.swift; sourceTree = "<group>"; };
+		8E3A6A4BA9300CE63051BD88 /* LearnContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnContent.swift; sourceTree = "<group>"; };
+		8EDD1C27303DAEA7811F5CB0 /* ReportCameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportCameraView.swift; sourceTree = "<group>"; };
+		9631BF00F393B25FB7E197BA /* ProximityBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProximityBannerView.swift; sourceTree = "<group>"; };
+		B06DFBD338264A54A80E8591 /* AlertsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertsView.swift; sourceTree = "<group>"; };
+		B5374CD5BF3A6951A9B55342 /* FlockAlert.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FlockAlert.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B7DD936BD6E4ABD8BD3DAF14 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		BFCB41C57ABD1ED175605F5A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		C61543DFF53E235DCB2437A0 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CAED6CA04DB450CB630EBD42 /* CameraReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraReport.swift; sourceTree = "<group>"; };
+		CEB4B2858AC0585A00D32E04 /* FlockAlertApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlockAlertApp.swift; sourceTree = "<group>"; };
+		D7C8D1C705683AE572A95B88 /* LearnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnView.swift; sourceTree = "<group>"; };
+		E4268C0306608A517E720DA3 /* OverpassAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassAPIClient.swift; sourceTree = "<group>"; };
+		ED22706990AA6BE3AC2C6E06 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
+		F2CD7CD13482061C93AECA2D /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		F353D4767A950D8647FC7E09 /* AlertEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertEvent.swift; sourceTree = "<group>"; };
+		F5E8574F2B74DDCFE61137DB /* AlertDispatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertDispatcher.swift; sourceTree = "<group>"; };
+		F6961146C3485AD9A8A78A5A /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		056478BF13C12453B0F72583 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B5374CD5BF3A6951A9B55342 /* FlockAlert.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0B060613C796E721C446BA54 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				551FC9D1CA3DFFE4DD52E80E /* SeedCameras.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		2F5CA3C02595F3123234E8BD /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F353D4767A950D8647FC7E09 /* AlertEvent.swift */,
+				F6961146C3485AD9A8A78A5A /* Camera.swift */,
+				CAED6CA04DB450CB630EBD42 /* CameraReport.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		4BBAEF47AC97EF50C3504504 = {
+			isa = PBXGroup;
+			children = (
+				728AC7BF868D2E29E4859138 /* FlockAlert */,
+				056478BF13C12453B0F72583 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		63647036ADC85004CBDF41A3 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				15D5D3AC2AACF10792CDBAB6 /* CameraDetailSheet.swift */,
+				3F28C136ED1FC2F572805E62 /* CameraPin.swift */,
+				ED22706990AA6BE3AC2C6E06 /* FilterView.swift */,
+				5EF2C41C3BD68C469DE68BB0 /* MapView.swift */,
+				6E9A13CC44F941052832C78F /* MapViewModel.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		703C35651564DBCDD9EF97FE /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				3E0B5025024888ED787FBA7C /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		728AC7BF868D2E29E4859138 /* FlockAlert */ = {
+			isa = PBXGroup;
+			children = (
+				7F8CDA60CE5363E0558BFAA6 /* AppState.swift */,
+				C61543DFF53E235DCB2437A0 /* ContentView.swift */,
+				58549C770178EF2C0A04A5C3 /* FlockAlert.entitlements */,
+				CEB4B2858AC0585A00D32E04 /* FlockAlertApp.swift */,
+				EBDBF57E9C138BC90A0FBB36 /* Design */,
+				B3B282EC16EB4F609E700BBB /* Features */,
+				2F5CA3C02595F3123234E8BD /* Models */,
+				0B060613C796E721C446BA54 /* Resources */,
+				8E6F840833DFFD49263EFA5C /* Services */,
+			);
+			path = FlockAlert;
+			sourceTree = "<group>";
+		};
+		7FBB8251233083E375FDB625 /* Report */ = {
+			isa = PBXGroup;
+			children = (
+				8EDD1C27303DAEA7811F5CB0 /* ReportCameraView.swift */,
+			);
+			path = Report;
+			sourceTree = "<group>";
+		};
+		8E6F840833DFFD49263EFA5C /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				F5E8574F2B74DDCFE61137DB /* AlertDispatcher.swift */,
+				1DCEB09B43AA6463EE39A20C /* GeofenceManager.swift */,
+				34A32918724CCC32796F1054 /* LocationManager.swift */,
+				E4268C0306608A517E720DA3 /* OverpassAPIClient.swift */,
+				50ED8D3664BBDC232F0F1E29 /* SyncManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AFF5B78BECBD6F3CE4A7EA6E /* Alerts */ = {
+			isa = PBXGroup;
+			children = (
+				39BFF38195E3B0B1510BAC35 /* AlertSettingsView.swift */,
+				B06DFBD338264A54A80E8591 /* AlertsView.swift */,
+				9631BF00F393B25FB7E197BA /* ProximityBannerView.swift */,
+			);
+			path = Alerts;
+			sourceTree = "<group>";
+		};
+		B3B282EC16EB4F609E700BBB /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				AFF5B78BECBD6F3CE4A7EA6E /* Alerts */,
+				F1F034055C2BC294B6F7E44F /* Learn */,
+				63647036ADC85004CBDF41A3 /* Map */,
+				B9D2B67F6FBD91FD7558A634 /* Onboarding */,
+				7FBB8251233083E375FDB625 /* Report */,
+				703C35651564DBCDD9EF97FE /* Settings */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		B9D2B67F6FBD91FD7558A634 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				BFCB41C57ABD1ED175605F5A /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		EBDBF57E9C138BC90A0FBB36 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				F2CD7CD13482061C93AECA2D /* HapticManager.swift */,
+				B7DD936BD6E4ABD8BD3DAF14 /* Theme.swift */,
+				EE267E0B89751163E4C2D386 /* Components */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		EE267E0B89751163E4C2D386 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				82B22C33B436F1D1C8FCEFE7 /* FlockTabBar.swift */,
+				439443F019FFA8E8D3F528AD /* GlassCard.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		F1F034055C2BC294B6F7E44F /* Learn */ = {
+			isa = PBXGroup;
+			children = (
+				83F6D9643B25B278B7784A0E /* ArticleView.swift */,
+				8E3A6A4BA9300CE63051BD88 /* LearnContent.swift */,
+				D7C8D1C705683AE572A95B88 /* LearnView.swift */,
+			);
+			path = Learn;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		10E0ECFAD3F01B7E18CA795D /* FlockAlert */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 75EE56CDE96D46B8633BD617 /* Build configuration list for PBXNativeTarget "FlockAlert" */;
+			buildPhases = (
+				0025762B30B70079F7E1B8E8 /* Sources */,
+				901EADE198CB191128D16D28 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FlockAlert;
+			packageProductDependencies = (
+			);
+			productName = FlockAlert;
+			productReference = B5374CD5BF3A6951A9B55342 /* FlockAlert.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D7F0B565B4A834C63D1D14B7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					10E0ECFAD3F01B7E18CA795D = {
+						DevelopmentTeam = G2VP9DN2R5;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 5A2EF37C08095DE112D182D7 /* Build configuration list for PBXProject "FlockAlert" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4BBAEF47AC97EF50C3504504;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 056478BF13C12453B0F72583 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				10E0ECFAD3F01B7E18CA795D /* FlockAlert */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		901EADE198CB191128D16D28 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D843CCE60D4B29F67E7056E /* SeedCameras.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0025762B30B70079F7E1B8E8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA576124C6AA211D4EF55142 /* AlertDispatcher.swift in Sources */,
+				A73C53EFA6CEF067A3FF7968 /* AlertEvent.swift in Sources */,
+				6BC553DD3DFF5DCE64950753 /* AlertSettingsView.swift in Sources */,
+				FBBD8B2F28F987F3CB850A46 /* AlertsView.swift in Sources */,
+				CE3C13F46C113583C5661424 /* AppState.swift in Sources */,
+				DBFDB6C113E1AE3A06713F0B /* ArticleView.swift in Sources */,
+				0091793945F6F8B259F3C83A /* Camera.swift in Sources */,
+				69969444DF1069D6F7A27DCD /* CameraDetailSheet.swift in Sources */,
+				91D61650607EEF1003BB2EFC /* CameraPin.swift in Sources */,
+				768A87B32376350A4F1D80D8 /* CameraReport.swift in Sources */,
+				678A1E31274746E560A4EA31 /* ContentView.swift in Sources */,
+				5C0B990F6DE0C096FB6C2FFA /* FilterView.swift in Sources */,
+				464CB7A3D82CDDBB2CABC75A /* FlockAlertApp.swift in Sources */,
+				235E01F4333C2E5026AB3DF1 /* FlockTabBar.swift in Sources */,
+				1080B7AEA2FD419E7D935BB1 /* GeofenceManager.swift in Sources */,
+				775456F42CF8706A2033A027 /* GlassCard.swift in Sources */,
+				0F2AA5C4AE3216253C036BAD /* HapticManager.swift in Sources */,
+				DDFB9E4D92DF432B55D9239F /* LearnContent.swift in Sources */,
+				BC03638109830149A2440AA3 /* LearnView.swift in Sources */,
+				FC6830ACF7B7FB3381DE4C61 /* LocationManager.swift in Sources */,
+				5C6F1A3135D06B2DE79C3CF0 /* MapView.swift in Sources */,
+				EE5B1A446FFE6E3C3D2B13A9 /* MapViewModel.swift in Sources */,
+				6932E133DC7F332E9DA024AF /* OnboardingView.swift in Sources */,
+				5232C87D00F178092F90A1D2 /* OverpassAPIClient.swift in Sources */,
+				ED1DF6AFFAD4D19DC42908BE /* ProximityBannerView.swift in Sources */,
+				4DD604994F1EE6D81CF2113E /* ReportCameraView.swift in Sources */,
+				659BC89AA49947F30D9C1BB1 /* SettingsView.swift in Sources */,
+				9FD0330DCF80885352D0BDD0 /* SyncManager.swift in Sources */,
+				20C974D3BB98A4E451A719D6 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		272E3E755F83E088BDDD18EA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = G2VP9DN2R5;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		9D06CEBA192058A46888C653 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = FlockAlert/FlockAlert.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = FlockAlert/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.flockalert.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C3EF5D3A8D3115475D8821FC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = FlockAlert/FlockAlert.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = FlockAlert/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.flockalert.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E67A11293BD521E112756964 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = G2VP9DN2R5;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5A2EF37C08095DE112D182D7 /* Build configuration list for PBXProject "FlockAlert" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				272E3E755F83E088BDDD18EA /* Debug */,
+				E67A11293BD521E112756964 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		75EE56CDE96D46B8633BD617 /* Build configuration list for PBXNativeTarget "FlockAlert" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D06CEBA192058A46888C653 /* Debug */,
+				C3EF5D3A8D3115475D8821FC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D7F0B565B4A834C63D1D14B7 /* Project object */;
+}
