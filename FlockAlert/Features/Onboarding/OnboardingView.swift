@@ -4,6 +4,8 @@ struct OnboardingView: View {
     let onComplete: () -> Void
     @State private var page = 0
     @State private var animate = false
+    // Shared location manager so the footer Continue can trigger permission on page 2
+    @StateObject private var locMgr = LocationManager()
 
     var body: some View {
         ZStack {
@@ -19,7 +21,7 @@ struct OnboardingView: View {
                 TabView(selection: $page) {
                     WelcomePage().tag(0)
                     HowItWorksPage().tag(1)
-                    LocationPage().tag(2)
+                    LocationPage(locMgr: locMgr).tag(2)
                     DisclaimerPage().tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
@@ -58,14 +60,8 @@ struct OnboardingView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .shadow(color: Color.flockPrimary.opacity(0.3), radius: 15, y: 5)
                     }
-
-                    if page < 3 {
-                        Button("Skip") {
-                            completeOnboarding()
-                        }
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(Color.flockTextSub)
-                    }
+                    // Skip button removed — Apple guideline 5.1.1(iv) requires the user
+                    // to always proceed to the location permission request.
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
@@ -74,6 +70,12 @@ struct OnboardingView: View {
     }
 
     private func nextPage() {
+        // On the location page, trigger the system permission dialog before advancing.
+        // This satisfies guideline 5.1.1(iv): the user must always reach the permission request.
+        if page == 2 {
+            locMgr.requestAlwaysAuthorization()
+            HapticManager.impact(.medium)
+        }
         if page < 3 {
             withAnimation(.easeInOut(duration: 0.3)) { page += 1 }
         } else {
@@ -161,7 +163,7 @@ struct HowItWorksPage: View {
                     description: "Get notified as you approach cameras while driving or walking."
                 )
                 FeatureRow(
-                    icon: "camera.badge.plus",
+                    icon: "camera.fill",
                     color: .flockSafe,
                     title: "Community Reports",
                     description: "Help keep the map current by reporting new or removed cameras."
@@ -182,7 +184,9 @@ struct HowItWorksPage: View {
 }
 
 struct LocationPage: View {
-    @StateObject private var locMgr = LocationManager()
+    // Receives the shared LocationManager from OnboardingView so permission
+    // can also be triggered by the footer Continue button.
+    @ObservedObject var locMgr: LocationManager
 
     var body: some View {
         VStack(spacing: 28) {
@@ -211,7 +215,9 @@ struct LocationPage: View {
             }
 
             if !locMgr.isAuthorized {
-                Button("Enable Location") {
+                // Button label is "Continue" per Apple guideline 5.1.1(iv) —
+                // "Enable" is not permitted on pre-permission prompts.
+                Button("Continue") {
                     locMgr.requestAlwaysAuthorization()
                     HapticManager.impact(.medium)
                 }
