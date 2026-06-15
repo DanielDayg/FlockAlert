@@ -122,7 +122,7 @@ struct CameraVerifySheet: View {
                             photoLibrary: .shared()
                         ) {
                             HStack {
-                                Image(systemName: selectedImageData != nil ? "photo.badge.checkmark" : "photo.badge.plus")
+                                Image(systemName: selectedImageData != nil ? "photo.fill" : "photo.badge.plus")
                                     .font(.system(size: 15, weight: .semibold))
                                 Text(selectedImageData != nil ? "Change Photo" : "Select Photo")
                                     .font(.system(size: 14, weight: .semibold))
@@ -296,6 +296,14 @@ struct CameraVerifySheet: View {
         try? modelContext.save()
 
         authManager.recordVerification(photoData: selectedImageData, context: modelContext)
+
+        ReportNotificationService.shared.notifyCameraVerification(
+            cameraID: camera.id.uuidString,
+            userName: profile.displayName,
+            hasPhoto: selectedImageData != nil,
+            note: note.isEmpty ? nil : note
+        )
+
         HapticManager.notification(.success)
 
         withAnimation {

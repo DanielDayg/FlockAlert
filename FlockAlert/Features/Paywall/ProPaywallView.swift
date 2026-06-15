@@ -179,13 +179,14 @@ struct ProPaywallView: View {
                     .padding(.bottom, 12)
 
                     // ── Required legal links (guideline 3.1.2c) ───────
-                    HStack(spacing: 4) {
+                    HStack(spacing: 16) {
                         Button("Privacy Policy") { showPrivacyPolicy = true }
-                        Text("·")
+                            .underline()
                         Button("Terms of Use") { showTerms = true }
+                            .underline()
                     }
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.flockTextSub.opacity(0.45))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Color.flockPrimary.opacity(0.8))
                     .padding(.bottom, 32)
                 }
             }

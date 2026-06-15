@@ -84,6 +84,16 @@ final class AuthManager: NSObject, ObservableObject {
         isSignedIn = false
     }
 
+    func deleteAccount(context: ModelContext) {
+        if let profile = currentProfile {
+            context.delete(profile)
+            try? context.save()
+        }
+        UserDefaults.standard.removeObject(forKey: "appleUserID")
+        currentProfile = nil
+        isSignedIn = false
+    }
+
     func awardPoints(_ amount: Int, context: ModelContext) {
         guard let profile = currentProfile else { return }
         profile.points += amount

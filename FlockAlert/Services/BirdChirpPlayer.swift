@@ -16,13 +16,15 @@ final class BirdChirpPlayer {
     }
 
     func chirp() {
-        guard engine.isRunning else { return }
-
-        // Duck music / navigation audio briefly
-        try? AVAudioSession.sharedInstance().setCategory(
-            .playback, options: [.duckOthers, .mixWithOthers]
-        )
+        // Mix with other audio — ambient category requires no background audio mode
+        try? AVAudioSession.sharedInstance().setCategory(.ambient)
         try? AVAudioSession.sharedInstance().setActive(true)
+
+        // Restart engine if the system stopped it (e.g. after backgrounding)
+        if !engine.isRunning {
+            try? engine.start()
+        }
+        guard engine.isRunning else { return }
 
         let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 1)!
         let totalFrames = AVAudioFrameCount(sampleRate * 0.55)

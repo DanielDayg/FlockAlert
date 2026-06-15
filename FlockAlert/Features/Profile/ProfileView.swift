@@ -1,9 +1,9 @@
 import SwiftUI
 import SwiftData
-import AuthenticationServices
 
 struct ProfileView: View {
     @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \CameraVerification.submittedAt, order: .reverse) private var verifications: [CameraVerification]
 
@@ -12,10 +12,112 @@ struct ProfileView: View {
             ZStack {
                 Color.flockBG.ignoresSafeArea()
 
-                if authManager.isSignedIn, let profile = authManager.currentProfile {
-                    SignedInProfile(profile: profile, verifications: verifications)
-                } else {
-                    SignInPrompt()
+                ScrollView {
+                    VStack(spacing: 16) {
+                        // ── Route Planner — visible to everyone ────────────
+                        NavigationLink(destination: RouteView()) {
+                            GlassCard(cornerRadius: 16) {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.green.opacity(0.15))
+                                            .frame(width: 44, height: 44)
+                                        Image(systemName: "map.fill")
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundStyle(Color.green)
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        HStack(spacing: 6) {
+                                            Text("Camera-Free Route Planner")
+                                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                                .foregroundStyle(Color.flockText)
+                                            if !subscriptionManager.isGuardian {
+                                                Text("GUARDIAN")
+                                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                                    .foregroundStyle(Color(hex: "FFB800"))
+                                                    .padding(.horizontal, 5)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color(hex: "FFB800").opacity(0.15))
+                                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                                            }
+                                        }
+                                        Text(subscriptionManager.isGuardian
+                                             ? "Navigate around surveillance cameras"
+                                             : "Upgrade to Guardian to evade the grid")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(Color.flockTextSub)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Color.green)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        // ── Leaderboard — visible to everyone ──────────────
+                        NavigationLink(destination: LeaderboardView().environmentObject(subscriptionManager)) {
+                            GlassCard(cornerRadius: 16) {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color(hex: "FFB800").opacity(0.15))
+                                            .frame(width: 44, height: 44)
+                                        Image(systemName: "trophy.fill")
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [Color(hex: "FFD700"), Color(hex: "FF6B00")],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        HStack(spacing: 6) {
+                                            Text("Community Leaderboard")
+                                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                                .foregroundStyle(Color.flockText)
+                                            if !subscriptionManager.isGuardian {
+                                                Text("GUARDIAN")
+                                                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                                    .foregroundStyle(Color(hex: "FFB800"))
+                                                    .padding(.horizontal, 5)
+                                                    .padding(.vertical, 2)
+                                                    .background(Color(hex: "FFB800").opacity(0.15))
+                                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                                            }
+                                        }
+                                        Text(subscriptionManager.isGuardian
+                                             ? "See your global rank among contributors"
+                                             : "Upgrade to Guardian to access rankings")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(Color.flockTextSub)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Color.flockTextSub)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        // ── Profile content ────────────────────────────────
+                        if authManager.isSignedIn, let profile = authManager.currentProfile {
+                            SignedInProfile(profile: profile, verifications: verifications)
+                        } else {
+                            SignInPrompt()
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 100)
                 }
             }
             .navigationTitle("Profile")
@@ -41,8 +143,7 @@ private struct SignInPrompt: View {
     @EnvironmentObject var authManager: AuthManager
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 32) {
+        VStack(spacing: 32) {
                 Spacer(minLength: 40)
 
                 // App icon area
@@ -95,9 +196,9 @@ private struct SignInPrompt: View {
 
                         Divider().background(Color.white.opacity(0.07))
 
-                        EarnRow(icon: "camera.badge.plus", label: "Camera Report", points: "+10", color: .flockPrimary)
+                        EarnRow(icon: "camera.fill", label: "Camera Report", points: "+10", color: .flockPrimary)
                         Divider().background(Color.white.opacity(0.07)).padding(.leading, 52)
-                        EarnRow(icon: "photo.badge.checkmark", label: "Photo Verification", points: "+25", color: .flockSafe)
+                        EarnRow(icon: "photo.fill", label: "Photo Verification", points: "+25", color: .flockSafe)
                         Divider().background(Color.white.opacity(0.07)).padding(.leading, 52)
                         EarnRow(icon: "star.circle.fill", label: "First Report Bonus", points: "+50", color: .flockCaution)
                     }
@@ -134,14 +235,21 @@ private struct SignInPrompt: View {
                 .padding(.horizontal, 20)
 
                 // Sign in button
-                SignInWithAppleButton(.signIn) { request in
-                    request.requestedScopes = [.fullName, .email]
-                } onCompletion: { result in
-                    authManager.handleSignIn(result: result)
+                Button {
+                    authManager.signIn()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 18, weight: .semibold))
+                        Text("Sign in with Apple")
+                            .font(.system(size: 17, weight: .semibold))
+                    }
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
-                .signInWithAppleButtonStyle(.white)
-                .frame(height: 52)
-                .cornerRadius(14)
                 .padding(.horizontal, 20)
 
                 Text("Your Apple ID is used only to identify your account locally. We don't share your information.")
@@ -152,7 +260,6 @@ private struct SignInPrompt: View {
 
                 Spacer(minLength: 100)
             }
-        }
     }
 }
 
@@ -162,7 +269,9 @@ private struct SignedInProfile: View {
     let profile: UserProfile
     let verifications: [CameraVerification]
     @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.modelContext) private var modelContext
+    @State private var showDeleteConfirm = false
 
     private var progressFraction: Double {
         let range = Double(profile.nextBadgeTotal - profile.currentBadgeStart)
@@ -279,6 +388,106 @@ private struct SignedInProfile: View {
                     ProfileStatPill(value: "\(profile.points)", label: "Points", icon: profile.badgeTier.icon, color: badgeColor)
                 }
 
+                // ── Leaderboard ────────────────────────────────────────
+                NavigationLink(destination: LeaderboardView().environmentObject(subscriptionManager)) {
+                    GlassCard(cornerRadius: 16) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color(hex: "FFB800").opacity(0.15))
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "trophy.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [Color(hex: "FFD700"), Color(hex: "FF6B00")],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                            }
+
+                            VStack(alignment: .leading, spacing: 3) {
+                                HStack(spacing: 6) {
+                                    Text("Community Leaderboard")
+                                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                        .foregroundStyle(Color.flockText)
+                                    if !subscriptionManager.isGuardian {
+                                        Text("GUARDIAN")
+                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                            .foregroundStyle(Color(hex: "FFB800"))
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 2)
+                                            .background(Color(hex: "FFB800").opacity(0.15))
+                                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                                    }
+                                }
+                                Text(subscriptionManager.isGuardian
+                                     ? "See how you rank against the community"
+                                     : "Upgrade to Guardian to access rankings")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.flockTextSub)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color.flockTextSub)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                // ── Camera-Free Route Planner ──────────────────────────
+                NavigationLink(destination: RouteView()) {
+                    GlassCard(cornerRadius: 16) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.green.opacity(0.15))
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "map.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(Color.green)
+                            }
+
+                            VStack(alignment: .leading, spacing: 3) {
+                                HStack(spacing: 6) {
+                                    Text("Camera-Free Route Planner")
+                                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                        .foregroundStyle(Color.flockText)
+                                    if !subscriptionManager.isGuardian {
+                                        Text("GUARDIAN")
+                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                            .foregroundStyle(Color(hex: "FFB800"))
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 2)
+                                            .background(Color(hex: "FFB800").opacity(0.15))
+                                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                                    }
+                                }
+                                Text(subscriptionManager.isGuardian
+                                     ? "Navigate around surveillance cameras"
+                                     : "Upgrade to Guardian to evade the grid")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.flockTextSub)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color.flockTextSub)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                    }
+                }
+                .buttonStyle(.plain)
+
                 // ── How to Earn ────────────────────────────────────────
                 GlassCard(cornerRadius: 18) {
                     VStack(spacing: 0) {
@@ -293,9 +502,9 @@ private struct SignedInProfile: View {
 
                         Divider().background(Color.white.opacity(0.07))
 
-                        EarnRow(icon: "camera.badge.plus", label: "Camera Report", points: "+10", color: .flockPrimary)
+                        EarnRow(icon: "camera.fill", label: "Camera Report", points: "+10", color: .flockPrimary)
                         Divider().background(Color.white.opacity(0.07)).padding(.leading, 52)
-                        EarnRow(icon: "photo.badge.checkmark", label: "Photo Verification", points: "+25", color: .flockSafe)
+                        EarnRow(icon: "photo.fill", label: "Photo Verification", points: "+25", color: .flockSafe)
                         Divider().background(Color.white.opacity(0.07)).padding(.leading, 52)
                         EarnRow(icon: "star.circle.fill", label: "First Report Bonus", points: "+50", color: .flockCaution)
                     }
@@ -347,6 +556,39 @@ private struct SignedInProfile: View {
                         RoundedRectangle(cornerRadius: 14)
                             .strokeBorder(Color.flockAlert.opacity(0.2), lineWidth: 1)
                     )
+                }
+
+                // ── Delete Account ─────────────────────────────────────
+                Button {
+                    showDeleteConfirm = true
+                } label: {
+                    HStack {
+                        Image(systemName: "person.crop.circle.badge.minus")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Delete Account")
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.flockAlert.opacity(0.7))
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.flockAlert.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .strokeBorder(Color.flockAlert.opacity(0.12), lineWidth: 1)
+                    )
+                }
+                .confirmationDialog(
+                    "Delete Account?",
+                    isPresented: $showDeleteConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Delete Account", role: .destructive) {
+                        authManager.deleteAccount(context: modelContext)
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This permanently deletes your profile, points, and contributions from this device. This action cannot be undone.")
                 }
 
                 Spacer(minLength: 100)
