@@ -1,0 +1,76 @@
+{
+  "identifier" : "FlockAlertProducts",
+  "nonConsumableProducts" : [
+
+  ],
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "consumableProducts" : [
+
+  ],
+  "autoRenewableSubscriptions" : [
+    {
+      "adHocOffers" : [
+
+      ],
+      "codeOffers" : [
+
+      ],
+      "displayPrice" : "3.99",
+      "familyShareable" : false,
+      "groupNumber" : 1,
+      "internalID" : "6778253817",
+      "introductoryOffer" : null,
+      "localizations" : [
+        {
+          "description" : "Proximity alerts, driving alerts, in-view detection.",
+          "displayName" : "Supporter Monthly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.flockalert.app.supporter.monthly",
+      "recurringSubscriptionPeriod" : "P1M",
+      "referenceName" : "Supporter Monthly",
+      "subscriptionGroupID" : "21561910",
+      "type" : "RecurringSubscription"
+    },
+    {
+      "adHocOffers" : [
+
+      ],
+      "codeOffers" : [
+
+      ],
+      "displayPrice" : "5.99",
+      "familyShareable" : false,
+      "groupNumber" : 1,
+      "internalID" : "6778515318",
+      "introductoryOffer" : null,
+      "localizations" : [
+        {
+          "description" : "Community photos, leaderboards, and Guardian badge.",
+          "displayName" : "Guardian Monthly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.flockalert.app.guardian.monthly",
+      "recurringSubscriptionPeriod" : "P1M",
+      "referenceName" : "Guardian Monthly",
+      "subscriptionGroupID" : "21561910",
+      "type" : "RecurringSubscription"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6774017307",
+    "_developerTeamID" : "7H78KA799N",
+    "_lastSynchronizedDate" : "2025-06-09T00:00:00Z",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

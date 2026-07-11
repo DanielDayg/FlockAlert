@@ -101,7 +101,7 @@ final class SyncManager: ObservableObject {
                 cam.longitude < lng + lngDelta
             }
         )
-        return (try? context.fetchCount(desc2) ?? 0) ?? 0 > 0
+        return (try? context.fetchCount(desc2)) ?? 0 > 0
     }
 
     private func countCameras(context: ModelContext) {

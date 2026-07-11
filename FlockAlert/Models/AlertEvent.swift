@@ -11,13 +11,17 @@ final class AlertEvent {
     var triggerDistanceMetres: Double
     var alertTypeRaw: String
     var wasRead: Bool
+    var cameraLatitude: Double
+    var cameraLongitude: Double
 
     init(
         cameraID: UUID,
         cameraOwnerLabel: String,
         cameraCity: String?,
         triggerDistanceMetres: Double,
-        alertType: AlertType
+        alertType: AlertType,
+        cameraLatitude: Double = 0.0,
+        cameraLongitude: Double = 0.0
     ) {
         self.id = UUID()
         self.timestamp = Date()
@@ -27,6 +31,8 @@ final class AlertEvent {
         self.triggerDistanceMetres = triggerDistanceMetres
         self.alertTypeRaw = alertType.rawValue
         self.wasRead = false
+        self.cameraLatitude = cameraLatitude
+        self.cameraLongitude = cameraLongitude
     }
 
     var alertType: AlertType {

@@ -101,7 +101,7 @@ struct CameraDetailSheet: View {
                     if !camera.photoURLs.isEmpty {
                         Divider().background(Color.white.opacity(0.08)).padding(.horizontal, 20)
 
-                        if subscriptionManager.isPro {
+                        if subscriptionManager.isGuardian {
                             // Show photos
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("COMMUNITY PHOTOS")

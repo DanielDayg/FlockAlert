@@ -4,8 +4,11 @@ struct OnboardingView: View {
     let onComplete: () -> Void
     @State private var page = 0
     @State private var animate = false
+    @State private var username = ""
     // Shared location manager so the footer Continue can trigger permission on page 2
     @StateObject private var locMgr = LocationManager()
+
+    private let totalPages = 5
 
     var body: some View {
         ZStack {
@@ -23,6 +26,7 @@ struct OnboardingView: View {
                     HowItWorksPage().tag(1)
                     LocationPage(locMgr: locMgr).tag(2)
                     DisclaimerPage().tag(3)
+                    UsernamePage(username: $username).tag(4)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 .frame(maxHeight: .infinity)
@@ -31,7 +35,7 @@ struct OnboardingView: View {
                 VStack(spacing: 20) {
                     // Page indicators
                     HStack(spacing: 6) {
-                        ForEach(0..<4) { i in
+                        ForEach(0..<totalPages) { i in
                             Capsule()
                                 .fill(i == page ? Color.flockPrimary : Color.flockTextSub.opacity(0.3))
                                 .frame(width: i == page ? 24 : 6, height: 6)
@@ -42,9 +46,9 @@ struct OnboardingView: View {
                     // CTA Button
                     Button(action: nextPage) {
                         HStack(spacing: 8) {
-                            Text(page < 3 ? "Continue" : "Get Started")
+                            Text(page < totalPages - 1 ? "Continue" : "Get Started")
                                 .font(.system(size: 17, weight: .bold))
-                            Image(systemName: page < 3 ? "arrow.right" : "checkmark")
+                            Image(systemName: page < totalPages - 1 ? "arrow.right" : "checkmark")
                                 .font(.system(size: 15, weight: .bold))
                         }
                         .foregroundStyle(Color.flockBG)
@@ -76,7 +80,7 @@ struct OnboardingView: View {
             locMgr.requestAlwaysAuthorization()
             HapticManager.impact(.medium)
         }
-        if page < 3 {
+        if page < totalPages - 1 {
             withAnimation(.easeInOut(duration: 0.3)) { page += 1 }
         } else {
             completeOnboarding()
@@ -84,6 +88,10 @@ struct OnboardingView: View {
     }
 
     private func completeOnboarding() {
+        let trimmed = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            UserDefaults.standard.set(trimmed, forKey: "pendingUsername")
+        }
         UserDefaults.standard.set(true, forKey: "onboardingComplete")
         onComplete()
     }
@@ -356,5 +364,58 @@ struct GridBackground: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Username Page
+
+struct UsernamePage: View {
+    @Binding var username: String
+
+    var body: some View {
+        VStack(spacing: 28) {
+            Spacer()
+
+            Image(systemName: "person.text.rectangle.fill")
+                .font(.system(size: 64, weight: .thin))
+                .foregroundStyle(Color.flockPrimary)
+
+            VStack(spacing: 12) {
+                Text("Pick Your Handle")
+                    .font(.system(size: 28, weight: .black, design: .rounded))
+                    .foregroundStyle(Color.flockText)
+
+                Text("This is how you appear on The Watchlist.\nYou can always change it later in your profile.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Color.flockTextSub)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+
+            VStack(spacing: 8) {
+                TextField("e.g. NightOwl_ATL", text: $username)
+                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.flockText)
+                    .multilineTextAlignment(.center)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .padding(.vertical, 18)
+                    .padding(.horizontal, 20)
+                    .background(Color.flockSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(username.isEmpty ? Color.white.opacity(0.08) : Color.flockPrimary.opacity(0.4), lineWidth: 1)
+                    )
+
+                Text(username.isEmpty ? "Skip to use a default name" : "\(username.trimmingCharacters(in: .whitespacesAndNewlines).count)/24 characters")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(Color.flockTextSub.opacity(0.5))
+            }
+            .padding(.horizontal, 28)
+
+            Spacer()
+        }
+        .padding(.horizontal, 24)
     }
 }

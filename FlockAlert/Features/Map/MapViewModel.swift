@@ -62,6 +62,7 @@ final class MapViewModel: ObservableObject {
 
         if let loc = appState.userLocation {
             centerOnUserIfNeeded(loc)
+            Task { await syncAndReload(center: loc.coordinate, radiusKm: 10) }
         }
     }
 
@@ -189,7 +190,7 @@ final class MapViewModel: ObservableObject {
     private func setupRegionDebounce() {
         // Normal debounced sync for panning/zooming within pin mode
         regionSubject
-            .debounce(for: .seconds(1.5), scheduler: DispatchQueue.main)
+            .debounce(for: .seconds(0.8), scheduler: DispatchQueue.main)
             .filter { [weak self] region in
                 guard let self else { return false }
                 let span = region.span.latitudeDelta

@@ -7,10 +7,20 @@ struct ProPaywallView: View {
 
     @State private var selectedPackageID: String? = AppConfiguration.supporterMonthlyID
     @State private var isPurchasing = false
+    @State private var isLoadingProducts = true
     @State private var errorMessage: String?
     @State private var loadFailed = false
     @State private var showPrivacyPolicy = false
     @State private var showTerms = false
+
+    // Promo code
+    @State private var showPromoEntry = false
+    @State private var promoCode = ""
+    @State private var promoMessage: String?
+    @State private var promoSuccess = false
+
+    // Review unlock
+    @State private var reviewUnlocked = false
 
     // Packages keyed by product ID
     private var packageMap: [String: Package] {
@@ -32,6 +42,7 @@ struct ProPaywallView: View {
                 VStack(spacing: 0) {
 
                     // ── Header ────────────────────────────────────────
+
                     VStack(spacing: 12) {
                         ZStack {
                             Circle()
@@ -109,6 +120,13 @@ struct ProPaywallView: View {
                         Group {
                             if isPurchasing {
                                 ProgressView().tint(.white)
+                            } else if isLoadingProducts {
+                                HStack(spacing: 8) {
+                                    ProgressView().tint(.white).scaleEffect(0.75)
+                                    Text("Loading prices…")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundStyle(.white)
+                                }
                             } else {
                                 Text("Unlock \(selectedPackageID == AppConfiguration.guardianMonthlyID ? "Guardian" : "Supporter") Access")
                                     .font(.system(size: 16, weight: .bold))
@@ -117,10 +135,10 @@ struct ProPaywallView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
-                        .background(productsLoaded ? Color.flockPrimary : Color.flockTextSub.opacity(0.25))
+                        .background(productsLoaded && !isLoadingProducts ? Color.flockPrimary : Color.flockTextSub.opacity(0.25))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
-                    .disabled(!productsLoaded || isPurchasing)
+                    .disabled(!productsLoaded || isPurchasing || isLoadingProducts)
                     .padding(.horizontal, 20)
 
                     if let error = errorMessage {
@@ -133,13 +151,20 @@ struct ProPaywallView: View {
                     }
 
                     if loadFailed {
-                        Button {
-                            loadFailed = false
-                            Task { await loadProducts() }
-                        } label: {
-                            Label("Retry loading prices", systemImage: "arrow.clockwise")
-                                .font(.system(size: 13))
-                                .foregroundStyle(Color.flockPrimary)
+                        VStack(spacing: 6) {
+                            Text("Couldn't load prices — check your connection")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.flockTextSub)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+                            Button {
+                                loadFailed = false
+                                Task { await loadProducts() }
+                            } label: {
+                                Label("Tap to retry", systemImage: "arrow.clockwise")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(Color.flockPrimary)
+                            }
                         }
                         .padding(.top, 8)
                     }
@@ -162,19 +187,122 @@ struct ProPaywallView: View {
                     }
                     .padding(.top, 14)
 
+                    // ── Promo code ────────────────────────────────────
+                    VStack(spacing: 8) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) { showPromoEntry.toggle() }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text("Have a promo code?")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.flockTextSub.opacity(0.6))
+                                Image(systemName: showPromoEntry ? "chevron.up" : "chevron.down")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(Color.flockTextSub.opacity(0.4))
+                            }
+                        }
+
+                        if showPromoEntry {
+                            HStack(spacing: 8) {
+                                TextField("Enter code", text: $promoCode)
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 14, design: .monospaced))
+                                    .autocorrectionDisabled()
+                                    .textInputAutocapitalization(.characters)
+                                    .foregroundStyle(Color.flockText)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(Color.flockSurface)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                                Button {
+                                    Task { await redeemPromoCode() }
+                                } label: {
+                                    Text("Apply")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                        .background(Color.flockPrimary)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                }
+                                .disabled(promoCode.trimmingCharacters(in: .whitespaces).isEmpty)
+                            }
+                            .padding(.horizontal, 20)
+
+                            if let msg = promoMessage {
+                                Text(msg)
+                                    .font(.caption)
+                                    .foregroundStyle(promoSuccess ? Color.flockSafe : Color.flockAlert)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 24)
+                            }
+                        }
+                    }
+                    .padding(.top, 14)
+                    .animation(.easeInOut(duration: 0.2), value: showPromoEntry)
+
                     Rectangle()
                         .fill(Color.white.opacity(0.06))
                         .frame(height: 1)
                         .padding(.horizontal, 40)
                         .padding(.vertical, 20)
 
-                    // ── Freedom button ────────────────────────────────
-                    Button { dismiss() } label: {
-                        Text("I can't afford it, but I believe in my right to privacy →")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.flockTextSub.opacity(0.4))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
+                    // ── Rate to fight surveillance ─────────────────────
+                    VStack(spacing: 10) {
+                        Button {
+                            guard !reviewUnlocked else { return }
+                            ReviewPromptManager.shared.requestReviewFromPaywall()
+                            subscriptionManager.objectWillChange.send()
+                            withAnimation(.spring(response: 0.3)) { reviewUnlocked = true }
+                            Task {
+                                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                dismiss()
+                            }
+                        } label: {
+                            VStack(spacing: 8) {
+                                if reviewUnlocked {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "checkmark.circle.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundStyle(Color.flockSafe)
+                                        Text("Supporter Access Unlocked!")
+                                            .font(.system(size: 15, weight: .bold))
+                                            .foregroundStyle(Color.flockSafe)
+                                    }
+                                    Text("Thanks for supporting Flock Alert ❤️")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Color.flockTextSub)
+                                } else {
+                                    Text("⭐️⭐️⭐️⭐️⭐️")
+                                        .font(.system(size: 18))
+                                    Text("Rate us 5 stars for free Supporter access")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(Color.flockText)
+                                    Text("Can't pay? A review helps fight the surveillance\nstate just as much. Unlocks Supporter tier free.")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(Color.flockTextSub.opacity(0.7))
+                                        .multilineTextAlignment(.center)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(reviewUnlocked ? Color.flockSafe.opacity(0.12) : Color.yellow.opacity(0.10))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(reviewUnlocked ? Color.flockSafe.opacity(0.4) : Color.yellow.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, 20)
+
+                        if !reviewUnlocked {
+                            Button { dismiss() } label: {
+                                Text("Skip for now")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Color.flockTextSub.opacity(0.3))
+                            }
+                        }
                     }
                     .padding(.bottom, 12)
 
@@ -191,6 +319,7 @@ struct ProPaywallView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .task { await loadProducts() }
         .sheet(isPresented: $showPrivacyPolicy) { PrivacyPolicyView() }
         .sheet(isPresented: $showTerms) { DisclaimerView() }
@@ -198,9 +327,15 @@ struct ProPaywallView: View {
     }
 
     private func loadProducts() async {
+        isLoadingProducts = true
         await subscriptionManager.fetchOffering()
-        try? await Task.sleep(nanoseconds: 600_000_000)
-        if !productsLoaded { loadFailed = true }
+        if productsLoaded { isLoadingProducts = false; return }
+        for _ in 0..<10 {
+            try? await Task.sleep(nanoseconds: 800_000_000) // 0.8s per tick, 8s max
+            if productsLoaded { isLoadingProducts = false; return }
+        }
+        isLoadingProducts = false
+        loadFailed = true
     }
 
     private func purchase(_ package: Package) async {
@@ -213,6 +348,31 @@ struct ProPaywallView: View {
         } catch PurchaseError.purchaseCancelled {
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func redeemPromoCode() async {
+        let result = PromoCodeManager.shared.redeemCode(promoCode)
+        switch result {
+        case .success(let reward):
+            promoSuccess = true
+            switch reward {
+            case .guardianFree:
+                promoMessage = "Guardian access unlocked — thank you!"
+                subscriptionManager.objectWillChange.send()
+                try? await Task.sleep(nanoseconds: 1_200_000_000)
+                dismiss()
+            case .offerCode:
+                promoMessage = "Opening Apple discount sheet…"
+                try? await Task.sleep(nanoseconds: 700_000_000)
+                PromoCodeManager.shared.presentOfferCodeSheet()
+            }
+        case .alreadyRedeemed:
+            promoSuccess = false
+            promoMessage = "This code has already been redeemed on this device."
+        case .invalid:
+            promoSuccess = false
+            promoMessage = "Invalid code — check for typos and try again."
         }
     }
 }

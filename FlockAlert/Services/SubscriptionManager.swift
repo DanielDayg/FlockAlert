@@ -31,27 +31,62 @@ final class SubscriptionManager: ObservableObject {
     static let shared = SubscriptionManager()
 
     // MARK: Published State
-    @Published var isPro: Bool = false
+    @Published var tier: SubscriptionTier = .free
     @Published var customerInfo: CustomerInfo?
     @Published var currentOffering: Offering?
+    @Published var donationOffering: Offering?
     @Published var isLoading: Bool = false
     @Published var purchaseError: PurchaseError?
 
+    /// True once the user has voluntarily donated — drives the Supporter badge only.
+    /// It never gates any feature.
+    @Published var isSupporter: Bool = UserDefaults.standard.bool(forKey: SubscriptionManager.donorKey)
+
+    static let donorKey = "supporter_donated"
+
+    // Convenience checks — every feature in Flock Alert is free for everyone, so these
+    // stay `true` and all former "Pro"/"Guardian" gates simply pass through.
+    var isPro: Bool { true }
+    var isGuardian: Bool { true }
+
     private init() {}
 
-    // MARK: - Configure (call once at app launch)
+    // MARK: - Early Init (call from FlockAlertApp.init BEFORE any view appears)
 
-    func configure() {
+    /// Configures the RevenueCat SDK synchronously so Purchases.shared is safe
+    /// to use anywhere in the app, including on the first rendered frame.
+    nonisolated static func earlyInit() {
         Purchases.logLevel = .warn
         Purchases.configure(withAPIKey: AppConfiguration.revenueCatAPIKey)
-        // Real-time stream — replaces PurchasesDelegate
+    }
+
+    // MARK: - Configure (call from RootView.onAppear — starts async work)
+
+    func configure() {
+        guard Purchases.isConfigured else { return }
+        if let appleUserID = UserDefaults.standard.string(forKey: "appleUserID") {
+            Task { await loginRevenueCat(appleUserID: appleUserID) }
+        }
         Task { await observeCustomerInfo() }
         Task { await fetchOffering() }
+        Task { await fetchDonationOffering() }
+    }
+
+    // MARK: - Link RevenueCat to Apple User ID
+
+    func loginRevenueCat(appleUserID: String) async {
+        do {
+            let (_, _) = try await Purchases.shared.logIn(appleUserID)
+            await fetchOffering()
+        } catch {
+            print("RevenueCat login error: \(error)")
+        }
     }
 
     // MARK: - Real-time CustomerInfo Stream (SDK v5 AsyncStream)
 
     private func observeCustomerInfo() async {
+        guard Purchases.isConfigured else { return }
         for await info in Purchases.shared.customerInfoStream {
             applyCustomerInfo(info)
         }
@@ -60,6 +95,7 @@ final class SubscriptionManager: ObservableObject {
     // MARK: - Manual Refresh (call after app foreground, login, etc.)
 
     func refreshStatus() async {
+        guard Purchases.isConfigured else { return }
         do {
             let info = try await Purchases.shared.customerInfo()
             applyCustomerInfo(info)
@@ -71,19 +107,62 @@ final class SubscriptionManager: ObservableObject {
     // MARK: - Fetch Offering
 
     func fetchOffering() async {
+        guard Purchases.isConfigured else { return }
         do {
             let offerings = try await Purchases.shared.offerings()
-            // Prefer named default offering; fall back to current
             currentOffering = offerings.offering(identifier: AppConfiguration.defaultOffering)
                            ?? offerings.current
         } catch {
-            // Paywall will show an empty / error state automatically
+            // Paywall will show empty/error state via productsLoaded = false
+        }
+    }
+
+    // MARK: - Donations (voluntary support)
+
+    /// Loads the monthly donation tiers from the "donations" offering.
+    func fetchDonationOffering() async {
+        guard Purchases.isConfigured else { return }
+        do {
+            let offerings = try await Purchases.shared.offerings()
+            donationOffering = offerings.offering(identifier: AppConfiguration.donationOffering)
+        } catch {
+            // Slider will show a graceful "not available yet" state.
+        }
+    }
+
+    /// The donation tiers, sorted cheapest → most expensive.
+    var donationPackages: [Package] {
+        (donationOffering?.availablePackages ?? [])
+            .sorted { $0.storeProduct.price < $1.storeProduct.price }
+    }
+
+    /// Make a voluntary donation. On success, grants the Supporter badge locally.
+    @discardableResult
+    func donate(package: Package) async throws -> Bool {
+        isLoading = true
+        purchaseError = nil
+        defer { isLoading = false }
+        do {
+            let result = try await Purchases.shared.purchase(package: package)
+            if result.userCancelled { throw PurchaseError.purchaseCancelled }
+            applyCustomerInfo(result.customerInfo)
+            UserDefaults.standard.set(true, forKey: SubscriptionManager.donorKey)
+            isSupporter = true
+            return true
+        } catch let err as PurchaseError {
+            purchaseError = err
+            throw err
+        } catch {
+            let mapped = mapError(error)
+            purchaseError = mapped
+            throw mapped
         }
     }
 
     // MARK: - Purchase
 
     /// Purchase a RevenueCat `Package`. Throws `PurchaseError` on failure.
+    /// Times out after 20 seconds so StoreKit hangs never spin forever.
     @discardableResult
     func purchase(package: Package) async throws -> CustomerInfo {
         isLoading = true
@@ -91,7 +170,21 @@ final class SubscriptionManager: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let result = try await Purchases.shared.purchase(package: package)
+            let result = try await withThrowingTaskGroup(of: PurchaseResultData.self) { group in
+                group.addTask {
+                    try await Purchases.shared.purchase(package: package)
+                }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 20_000_000_000) // 20s timeout
+                    throw PurchaseError.networkError(
+                        NSError(domain: "FlockAlert", code: -1,
+                                userInfo: [NSLocalizedDescriptionKey: "Purchase timed out. Please try again."])
+                    )
+                }
+                let first = try await group.next()!
+                group.cancelAll()
+                return first
+            }
             if result.userCancelled { throw PurchaseError.purchaseCancelled }
             applyCustomerInfo(result.customerInfo)
             return result.customerInfo
@@ -129,7 +222,19 @@ final class SubscriptionManager: ObservableObject {
 
     private func applyCustomerInfo(_ info: CustomerInfo) {
         customerInfo = info
-        isPro = info.entitlements[AppConfiguration.proEntitlement]?.isActive == true
+        let entitlements = info.entitlements
+        if entitlements[AppConfiguration.guardianEntitlement]?.isActive == true {
+            tier = .guardian
+        } else if entitlements[AppConfiguration.supporterEntitlement]?.isActive == true {
+            tier = .supporter
+        } else {
+            tier = .free
+        }
+        // Supporter badge: granted by any active donation entitlement (or a prior local grant).
+        if entitlements[AppConfiguration.supporterBadgeEntitlement]?.isActive == true {
+            isSupporter = true
+            UserDefaults.standard.set(true, forKey: SubscriptionManager.donorKey)
+        }
     }
 
     private func mapError(_ error: Error) -> PurchaseError {

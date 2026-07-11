@@ -1,5 +1,22 @@
 name: FlockAlert
 
+schemes:
+  FlockAlert:
+    build:
+      targets:
+        FlockAlert: all
+        FlockAlertWidget: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
 packages:
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios-spm
@@ -32,14 +49,16 @@ targets:
     resources:
       - path: FlockAlert/Resources/SeedCameras.json
       - path: FlockAlert/Resources/Assets.xcassets
+      - path: FlockAlert/Resources/tweet.caf
+      - path: FlockAlert/PrivacyInfo.xcprivacy
     info:
       path: FlockAlert/Resources/Info.plist
       properties:
         CFBundleName: Flock Alert
         CFBundleDisplayName: Flock Alert
         CFBundleIdentifier: com.flockalert.app
-        CFBundleShortVersionString: "1.0.0"
-        CFBundleVersion: "2"
+        CFBundleShortVersionString: "1.2.1"
+        CFBundleVersion: "12"
         LSRequiresIPhoneOS: true
         UIRequiredDeviceCapabilities:
           - location-services
@@ -47,6 +66,10 @@ targets:
         UIBackgroundModes:
           - location
           - fetch
+          - processing
+          - audio
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.flockalert.app.weeklyreport
         NSLocationAlwaysAndWhenInUseUsageDescription: "Flock Alert uses your location to alert you as you approach documented surveillance cameras. Your location is never sent to our servers."
         NSLocationAlwaysUsageDescription: "Flock Alert monitors for nearby surveillance cameras in the background so you can receive alerts while driving."
         NSLocationWhenInUseUsageDescription: "Flock Alert shows surveillance cameras near your current location."
@@ -77,7 +100,42 @@ targets:
         product: RevenueCat
       - package: RevenueCat
         product: RevenueCatUI
+      - target: FlockAlertWidget
+        embed: true
     capabilities:
       maps: {}
       signInWithApple: {}
       inAppPurchase: {}
+      appGroups:
+        groups:
+          - group.com.flockalert.app
+
+  FlockAlertWidget:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: FlockAlertWidget
+        excludes:
+          - "Info.plist"
+    info:
+      path: FlockAlertWidget/Info.plist
+      properties:
+        CFBundleName: FlockAlert Widget
+        CFBundleDisplayName: FlockAlert Widget
+        CFBundleIdentifier: com.flockalert.app.widget
+        CFBundleShortVersionString: "1.2.1"
+        CFBundleVersion: "12"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flockalert.app.widget
+        INFOPLIST_FILE: FlockAlertWidget/Info.plist
+        SWIFT_VERSION: "5.9"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: G2VP9DN2R5
+    capabilities:
+      appGroups:
+        groups:
+          - group.com.flockalert.app

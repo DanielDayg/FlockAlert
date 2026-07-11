@@ -31,7 +31,7 @@ struct TabBarButton: View {
         switch tab {
         case .map:      return isSelected ? "map.fill" : "map"
         case .alerts:   return isSelected ? "bell.badge.fill" : "bell"
-        case .report:   return isSelected ? "camera.badge.plus" : "camera.badge.plus"
+        case .report:   return isSelected ? "camera.fill" : "camera"
         case .learn:    return isSelected ? "book.fill" : "book"
         case .profile:  return isSelected ? "person.fill" : "person"
         }
@@ -49,6 +49,7 @@ struct TabBarButton: View {
 
     var body: some View {
         Button {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
             withAnimation(.spring(response: 0.28, dampingFraction: 0.7)) {
                 selectedTab = tab
             }

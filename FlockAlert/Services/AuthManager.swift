@@ -6,6 +6,7 @@ import SwiftUI
 final class AuthManager: NSObject, ObservableObject {
     @Published var isSignedIn: Bool = false
     @Published var currentProfile: UserProfile?
+    @Published var needsUsernameSetup: Bool = false
 
     private var modelContext: ModelContext?
 
@@ -64,10 +65,14 @@ final class AuthManager: NSObject, ObservableObject {
             if let existing = try? context.fetch(descriptor).first {
                 currentProfile = existing
             } else {
-                let profile = UserProfile(appleUserID: userID, displayName: displayName, email: email)
+                let pending = UserDefaults.standard.string(forKey: "pendingUsername")
+                let finalName = (pending?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? displayName
+                UserDefaults.standard.removeObject(forKey: "pendingUsername")
+                let profile = UserProfile(appleUserID: userID, displayName: finalName, email: email)
                 context.insert(profile)
                 try? context.save()
                 currentProfile = profile
+                needsUsernameSetup = true
             }
 
             UserDefaults.standard.set(userID, forKey: "appleUserID")
@@ -76,6 +81,29 @@ final class AuthManager: NSObject, ObservableObject {
             // Link RevenueCat customer to Apple user ID
             Task { await SubscriptionManager.shared.loginRevenueCat(appleUserID: userID) }
         }
+    }
+
+    func continueAsGuest(context: ModelContext) {
+        let guestID = "guest_\(UUID().uuidString)"
+        let pending = UserDefaults.standard.string(forKey: "pendingUsername")
+        let name = (pending?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? "Anonymous Scout"
+        UserDefaults.standard.removeObject(forKey: "pendingUsername")
+        let profile = UserProfile(appleUserID: guestID, displayName: name, isGuest: true)
+        context.insert(profile)
+        try? context.save()
+        currentProfile = profile
+        UserDefaults.standard.set(guestID, forKey: "appleUserID")
+        isSignedIn = true
+        needsUsernameSetup = true
+    }
+
+    func updateDisplayName(_ name: String, context: ModelContext) {
+        guard let profile = currentProfile else { return }
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        profile.displayName = trimmed
+        try? context.save()
+        objectWillChange.send()
     }
 
     func signOut() {

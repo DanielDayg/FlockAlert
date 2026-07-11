@@ -5,6 +5,7 @@ import RevenueCatUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @EnvironmentObject var authManager: AuthManager
     @Environment(\.modelContext) private var modelContext
     @Query private var cameras: [Camera]
     @Query private var reports: [CameraReport]
@@ -14,7 +15,9 @@ struct SettingsView: View {
     @State private var showAbout = false
     @State private var showClearConfirm = false
     @State private var showPaywall = false
+    @State private var showDonation = false
     @State private var showCustomerCenter = false
+    @State private var showDeleteAccountConfirm = false
 
     let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
 
@@ -24,24 +27,44 @@ struct SettingsView: View {
                 Color.flockBG.ignoresSafeArea()
 
                 List {
-                    // ── Pro Banner ───────────────────────────────────
-                    if !subscriptionManager.isPro {
-                        Section {
-                            Button { showPaywall = true } label: {
+                    // ── Support banner — every feature is free ───────
+                    Section {
+                        if subscriptionManager.isSupporter {
+                            HStack(spacing: 10) {
+                                Image(systemName: "heart.fill")
+                                    .foregroundStyle(Color.flockPrimary)
+                                Text("Supporter — thank you 💙")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Color.flockPrimary)
+                                Spacer()
+                            }
+                            .listRowBackground(Color.flockPrimary.opacity(0.08))
+
+                            Button { showCustomerCenter = true } label: {
+                                SettingsRow(
+                                    icon: "person.crop.circle.badge.checkmark",
+                                    label: "Manage Support",
+                                    sub: "Billing, change amount & cancel anytime",
+                                    color: .flockPrimary
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button { showDonation = true } label: {
                                 HStack(spacing: 14) {
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 10)
                                             .fill(Color.flockPrimary.opacity(0.15))
                                             .frame(width: 40, height: 40)
-                                        Image(systemName: "bolt.shield.fill")
+                                        Image(systemName: "heart.fill")
                                             .font(.system(size: 16, weight: .semibold))
                                             .foregroundStyle(Color.flockPrimary)
                                     }
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Upgrade to Pro")
+                                        Text("Support Flock Alert")
                                             .font(.system(size: 14, weight: .bold))
                                             .foregroundStyle(Color.flockPrimary)
-                                        Text("Voice alerts, bird chirp & in-view detection")
+                                        Text("The app is 100% free — chip in if you can")
                                             .font(.system(size: 11))
                                             .foregroundStyle(Color.flockTextSub)
                                     }
@@ -53,30 +76,6 @@ struct SettingsView: View {
                             }
                             .buttonStyle(.plain)
                             .listRowBackground(Color.flockPrimary.opacity(0.08))
-                        }
-                    } else {
-                        Section {
-                            // Active badge
-                            HStack(spacing: 10) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundStyle(Color.flockSafe)
-                                Text("Flock Alert Pro — Active")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(Color.flockSafe)
-                                Spacer()
-                            }
-                            .listRowBackground(Color.flockSafe.opacity(0.08))
-
-                            // Manage subscription via Customer Center
-                            Button { showCustomerCenter = true } label: {
-                                SettingsRow(
-                                    icon: "person.crop.circle.badge.checkmark",
-                                    label: "Manage Subscription",
-                                    sub: "Billing, cancellation & support",
-                                    color: .flockSafe
-                                )
-                            }
-                            .buttonStyle(.plain)
                         }
                     }
 
@@ -137,6 +136,26 @@ struct SettingsView: View {
                     }
                     .listRowBackground(Color.flockSurface)
 
+                    // ── Account ──────────────────────────────────────────
+                    if authManager.isSignedIn {
+                        Section {
+                            Button(role: .destructive) {
+                                showDeleteAccountConfirm = true
+                            } label: {
+                                SettingsRow(
+                                    icon: "person.crop.circle.badge.minus",
+                                    label: "Delete Account",
+                                    sub: "Permanently removes your profile and data",
+                                    color: .flockAlert
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        } header: {
+                            ListHeader("ACCOUNT")
+                        }
+                        .listRowBackground(Color.flockSurface)
+                    }
+
                     // ── Legal ──────────────────────────────────────────
                     Section {
                         Button { showPrivacyPolicy = true } label: {
@@ -179,6 +198,7 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.large)
         }
         .sheet(isPresented: $showPaywall) { ProPaywallView().environmentObject(subscriptionManager) }
+        .sheet(isPresented: $showDonation) { DonationView().environmentObject(subscriptionManager) }
         .sheet(isPresented: $showCustomerCenter) { CustomerCenterView() }
         .sheet(isPresented: $showPrivacyPolicy) { PrivacyPolicyView() }
         .sheet(isPresented: $showDisclaimer) { DisclaimerView() }
@@ -188,6 +208,14 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("This removes alert logs from your device. Camera data is not affected.")
+        }
+        .confirmationDialog("Delete Account?", isPresented: $showDeleteAccountConfirm, titleVisibility: .visible) {
+            Button("Delete Account", role: .destructive) {
+                authManager.deleteAccount(context: modelContext)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This permanently deletes your profile, points, and contributions. This action cannot be undone.")
         }
         .preferredColorScheme(.dark)
     }
@@ -362,25 +390,80 @@ struct AboutView: View {
         NavigationStack {
             ZStack {
                 Color.flockBG.ignoresSafeArea()
-                VStack(spacing: 24) {
-                    Spacer()
-                    Image(systemName: "eye.trianglebadge.exclamationmark")
-                        .font(.system(size: 60))
-                        .foregroundStyle(Color.flockPrimary)
-                    Text("Flock Alert")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(Color.flockText)
-                    Text("The Waze of public surveillance transparency.")
-                        .font(.flockBody)
-                        .foregroundStyle(Color.flockTextSub)
-                        .multilineTextAlignment(.center)
-                    Text("Built for informed citizens.\nPowered by open data.\nFor civil liberties.")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color.flockTextSub.opacity(0.7))
-                        .multilineTextAlignment(.center)
-                    Spacer()
+                ScrollView {
+                    VStack(spacing: 24) {
+                        VStack(spacing: 16) {
+                            Image(systemName: "eye.trianglebadge.exclamationmark")
+                                .font(.system(size: 60))
+                                .foregroundStyle(Color.flockPrimary)
+                            Text("Flock Alert")
+                                .font(.system(size: 32, weight: .black, design: .rounded))
+                                .foregroundStyle(Color.flockText)
+                            Text("The Waze of public surveillance transparency.")
+                                .font(.flockBody)
+                                .foregroundStyle(Color.flockTextSub)
+                                .multilineTextAlignment(.center)
+                            Text("Built for informed citizens.\nPowered by open data.\nFor civil liberties.")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.flockTextSub.opacity(0.7))
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.top, 32)
+
+                        // ── Early Access Notice ───────────────────────────
+                        VStack(spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "hammer.fill")
+                                    .foregroundStyle(Color.flockCaution)
+                                Text("Early Access")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(Color.flockText)
+                                Spacer()
+                            }
+                            Text("Flock Alert is a brand-new app and we're constantly shipping improvements. You may encounter occasional bugs — we appreciate your patience as we make this the best it can be.")
+                                .font(.system(size: 13))
+                                .foregroundStyle(Color.flockTextSub)
+                                .lineSpacing(4)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(16)
+                        .background(Color.flockSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                        // ── Bug Report ────────────────────────────────────
+                        Button {
+                            let subject = "Flock Alert Bug Report".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                            let body = "Describe the issue below:\n\n\nDevice: \(UIDevice.current.model)\niOS: \(UIDevice.current.systemVersion)\nApp Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")"
+                                .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                            if let url = URL(string: "mailto:danielstockday@gmail.com?subject=\(subject)&body=\(body)") {
+                                UIApplication.shared.open(url)
+                            }
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "envelope.fill")
+                                    .font(.system(size: 15))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Report a Bug")
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Text("Help us improve Flock Alert")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Color.flockTextSub)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(Color.flockTextSub)
+                            }
+                            .foregroundStyle(Color.flockText)
+                            .padding(16)
+                            .background(Color.flockSurface)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
+
+                        Spacer(minLength: 32)
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding()
             }
             .navigationTitle("About")
             .navigationBarTitleDisplayMode(.inline)

@@ -35,6 +35,36 @@ struct Article: Identifiable {
 struct LearnContent {
     static let articles: [Article] = [
         Article(
+            id: "unconstitutional",
+            title: "The Constitutional Case Against Flock",
+            category: .civilLiberties,
+            readMinutes: 7,
+            intro: "Always-on, warrantless, mass license plate surveillance collides head-on with the Constitution. It tracks every driver — not suspects, everyone — with no warrant, no probable cause, and no consent. Here is the case that it violates your rights.",
+            sections: [
+                Article.Section(
+                    heading: "The Fourth Amendment",
+                    body: "\"The right of the people to be secure in their persons, houses, papers, and effects, against unreasonable searches and seizures, shall not be violated.\"\n\nThat is the Fourth Amendment. It was written by people who had lived under \"general warrants\" — blanket authority for the government to search anyone, anytime, without individualized suspicion. They found it so tyrannical they built a revolution around ending it.\n\nA Flock network is a general warrant made of cameras. It records the movements of every vehicle that passes — the overwhelming majority belonging to people suspected of nothing. No judge signs off. No probable cause is required. You are searched simply for existing on a public road."
+                ),
+                Article.Section(
+                    heading: "Carpenter and the Mosaic Theory",
+                    body: "The government argues each photo is legal because you have \"no expectation of privacy\" on a public street. But the Supreme Court has repeatedly signaled that the WHOLE is different from the parts.\n\nIn Carpenter v. United States (2018), the Court held that police need a warrant to obtain long-term cell phone location data — because tracking someone's movements over time reveals \"the privacies of life.\"\n\nIn United States v. Jones (2012), five Justices agreed that long-term GPS tracking is a search, even though each individual location is public.\n\nThis is the \"mosaic theory\": one snapshot may reveal little, but thousands of time-stamped locations, aggregated, expose where you sleep, work, worship, protest, and seek medical care. Flock builds exactly that mosaic — on everyone, continuously."
+                ),
+                Article.Section(
+                    heading: "The First Amendment",
+                    body: "The Constitution doesn't just protect privacy — it protects the freedom to assemble, associate, and speak without government monitoring.\n\nA camera that logs every car outside a house of worship, a union hall, a protest, an abortion clinic, or a political meeting creates a record of your associations. Courts have long recognized that surveillance of protected activity produces a \"chilling effect\" — people stop showing up when they know they are being logged.\n\nWhen a Texas sheriff used a plate-reader network to hunt a woman who had an abortion, that was not a hypothetical. Mass surveillance turns your movements into evidence against your freedoms."
+                ),
+                Article.Section(
+                    heading: "No Warrant. No Suspicion. No Consent.",
+                    body: "Strip away the marketing and this is what remains:\n\n• NO WARRANT — a judge never authorizes tracking you.\n• NO SUSPICION — you don't have to do anything wrong to be recorded.\n• NO CONSENT — you were never asked, and usually never told.\n• NO OPT-OUT — there is no way to remove yourself.\n• NO LIMITS — the data is shared across thousands of agencies, and \"30-day deletion\" is a sales setting, not a law.\n\nEvery one of those is a principle the Fourth Amendment was written to protect. This is not law and order. It is surveillance without a warrant, sold by the camera."
+                ),
+                Article.Section(
+                    heading: "The Fight in the Courts",
+                    body: "The legal battle is live and growing:\n\n• In Norfolk, Virginia, residents backed by the Institute for Justice sued to tear down a 172-camera Flock network, arguing it is warrantless mass surveillance in violation of the Fourth Amendment.\n• The EFF and ACLU are challenging ALPR programs across the country and pushing for warrant requirements.\n• Dozens of cities have cancelled contracts after residents demanded accountability.\n\nCourts remain split, and the technology is outrunning the law — which is exactly why public pressure matters. The Constitution is not self-enforcing. It is defended by people who refuse to be tracked in silence."
+                )
+            ]
+        ),
+
+        Article(
             id: "what-is-flock",
             title: "What Is Flock Safety?",
             category: .whatIsFlock,

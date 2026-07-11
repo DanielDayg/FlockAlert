@@ -17,20 +17,21 @@ final class AlertDispatcher {
     // MARK: - Stage 1: Camera Approaching (~500 ft out)
 
     func dispatchApproach(camera: Camera, distance: Double, mode: AlertMode, voice: Bool) {
+        // All proximity alerts require Pro
+        guard SubscriptionManager.shared.isPro else { return }
+
         guard !onCooldown(camera: camera, cooldowns: &approachCooldowns, interval: approachCooldown)
         else { return }
         stamp(camera: camera, in: &approachCooldowns)
 
-        // Bird chirp + voice are Pro-only features
-        let isPro = SubscriptionManager.shared.isPro
-        if isPro && mode != .silent && mode != .hapticOnly {
+        if mode != .silent && mode != .hapticOnly {
             chirpPlayer.chirp()
         }
 
         switch mode {
         case .banner, .voice:
             sendApproachNotification(camera: camera, distance: distance)
-            if isPro && mode == .voice && voice { speakApproach(camera: camera, distance: distance) }
+            if mode == .voice && voice { speakApproach(camera: camera, distance: distance) }
             HapticManager.notification(.warning)
         case .silent:
             HapticManager.notification(.warning)
@@ -46,6 +47,10 @@ final class AlertDispatcher {
         guard !onCooldown(camera: camera, cooldowns: &inViewCooldowns, interval: inViewCooldown)
         else { return }
         stamp(camera: camera, in: &inViewCooldowns)
+
+        if mode != .silent && mode != .hapticOnly {
+            chirpPlayer.chirp()
+        }
 
         switch mode {
         case .banner, .voice:
@@ -66,7 +71,7 @@ final class AlertDispatcher {
         let content = UNMutableNotificationContent()
         content.title = "🚨 Flock Camera Ahead"
         content.body  = "Active ALPR in \(ft) ft · \(camera.ownerLabel)"
-        content.sound = .default
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("tweet.caf"))
         content.categoryIdentifier  = "CAMERA_APPROACH"
         content.interruptionLevel   = .timeSensitive
         content.userInfo = ["cameraID": camera.id.uuidString, "stage": "approach"]
@@ -77,9 +82,13 @@ final class AlertDispatcher {
         let content = UNMutableNotificationContent()
         content.title = "⚠️ You Are In Camera View"
         content.body  = "\(camera.ownerLabel) ALPR is scanning your plate now"
-        content.sound = UNNotificationSound(named: UNNotificationSoundName("default"))
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("tweet.caf"))
         content.categoryIdentifier  = "CAMERA_IN_VIEW"
-        content.interruptionLevel   = .critical   // breaks through focus modes
+        // .critical requires the critical-alerts entitlement (manual Apple approval) which this app
+        // doesn't hold — iOS downgrades it and App Review flags it. Use .timeSensitive, which matches
+        // our com.apple.developer.usernotifications.time-sensitive entitlement and still breaks through
+        // Focus modes.
+        content.interruptionLevel   = .timeSensitive
         content.userInfo = ["cameraID": camera.id.uuidString, "stage": "inView"]
         deliver(content, id: "inview-\(camera.id)-\(Int(Date().timeIntervalSince1970))")
     }

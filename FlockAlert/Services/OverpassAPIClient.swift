@@ -7,9 +7,12 @@ import CoreLocation
 struct OverpassAPIClient {
     static let shared = OverpassAPIClient()
 
+    // Ordered most-reliable first. The public Overpass API is heavily rate-limited,
+    // so we spread requests across several mirrors and retry (see fetch()).
     private let endpoints = [
-        "https://overpass-api.de/api/interpreter",
         "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.private.coffee/api/interpreter",
         "https://overpass.openstreetmap.ru/api/interpreter"
     ]
 
@@ -73,13 +76,23 @@ struct OverpassAPIClient {
     private func fetch(query: String) async throws -> [OverpassCamera] {
         var lastError: Error = OverpassError.noEndpointAvailable
 
-        for endpoint in endpoints {
-            do {
-                let cameras = try await fetch(query: query, endpoint: endpoint)
-                return cameras
-            } catch {
-                lastError = error
-                // Try next mirror
+        // Two passes over the mirrors. The public Overpass API frequently returns
+        // 429 (rate limit) or 504 (timeout) under load — but a mirror that's
+        // momentarily throttled usually recovers within a second or two. Without
+        // this retry, a single bad response meant zero cameras in busy cities
+        // (New York, San Francisco, etc.).
+        for attempt in 0..<2 {
+            for endpoint in endpoints {
+                do {
+                    return try await fetch(query: query, endpoint: endpoint)
+                } catch {
+                    lastError = error
+                    // Try next mirror.
+                }
+            }
+            if attempt == 0 {
+                // Brief backoff before the retry pass.
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
         }
         throw lastError

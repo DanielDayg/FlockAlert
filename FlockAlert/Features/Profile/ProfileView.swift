@@ -141,6 +141,7 @@ struct ProfileView: View {
 
 private struct SignInPrompt: View {
     @EnvironmentObject var authManager: AuthManager
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         VStack(spacing: 32) {
@@ -234,7 +235,7 @@ private struct SignInPrompt: View {
                 }
                 .padding(.horizontal, 20)
 
-                // Sign in button
+                // Sign in with Apple
                 Button {
                     authManager.signIn()
                 } label: {
@@ -252,9 +253,31 @@ private struct SignInPrompt: View {
                 }
                 .padding(.horizontal, 20)
 
-                Text("Your Apple ID is used only to identify your account locally. We don't share your information.")
+                // Continue as Guest
+                Button {
+                    authManager.continueAsGuest(context: modelContext)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "person.fill.questionmark")
+                            .font(.system(size: 16, weight: .semibold))
+                        Text("Continue as Guest")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.flockText)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(Color.flockSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+                    )
+                }
+                .padding(.horizontal, 20)
+
+                Text("Guest accounts are local only — progress won't sync across devices.")
                     .font(.system(size: 11))
-                    .foregroundStyle(Color.flockTextSub.opacity(0.7))
+                    .foregroundStyle(Color.flockTextSub.opacity(0.6))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
@@ -272,6 +295,8 @@ private struct SignedInProfile: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.modelContext) private var modelContext
     @State private var showDeleteConfirm = false
+    @State private var showUsernameEdit = false
+    @State private var usernameInput = ""
 
     private var progressFraction: Double {
         let range = Double(profile.nextBadgeTotal - profile.currentBadgeStart)
@@ -319,9 +344,32 @@ private struct SignedInProfile: View {
                             )
 
                             VStack(alignment: .leading, spacing: 5) {
-                                Text(profile.displayName)
-                                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                                    .foregroundStyle(Color.flockText)
+                                HStack(spacing: 6) {
+                                    Text(profile.displayName)
+                                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                                        .foregroundStyle(Color.flockText)
+                                    if subscriptionManager.isSupporter {
+                                        HStack(spacing: 3) {
+                                            Image(systemName: "heart.fill")
+                                                .font(.system(size: 9, weight: .bold))
+                                            Text("SUPPORTER")
+                                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                        }
+                                        .foregroundStyle(Color.flockPrimary)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 3)
+                                        .background(Color.flockPrimary.opacity(0.15))
+                                        .clipShape(RoundedRectangle(cornerRadius: 5))
+                                    }
+                                    Button {
+                                        usernameInput = profile.displayName
+                                        showUsernameEdit = true
+                                    } label: {
+                                        Image(systemName: "pencil.circle.fill")
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(Color.flockTextSub.opacity(0.5))
+                                    }
+                                }
 
                                 HStack(spacing: 6) {
                                     Image(systemName: profile.badgeTier.icon)
@@ -330,6 +378,11 @@ private struct SignedInProfile: View {
                                     Text(profile.badgeTier.rawValue)
                                         .font(.system(size: 13, weight: .semibold))
                                         .foregroundStyle(badgeColor)
+                                    if profile.isGuest {
+                                        Text("· Guest")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(Color.flockTextSub.opacity(0.6))
+                                    }
                                 }
 
                                 Text("Member since \(profile.joinDate.formatted(.dateTime.month().year()))")
@@ -596,6 +649,25 @@ private struct SignedInProfile: View {
             .padding(.horizontal, 16)
             .padding(.top, 8)
         }
+        .sheet(isPresented: $showUsernameEdit) {
+            UsernameEditSheet(current: usernameInput) { newName in
+                authManager.updateDisplayName(newName, context: modelContext)
+            }
+        }
+        .onAppear {
+            if authManager.needsUsernameSetup {
+                authManager.needsUsernameSetup = false
+                usernameInput = profile.displayName
+                showUsernameEdit = true
+            }
+        }
+        .onChange(of: authManager.needsUsernameSetup) { _, newVal in
+            if newVal {
+                authManager.needsUsernameSetup = false
+                usernameInput = profile.displayName
+                showUsernameEdit = true
+            }
+        }
     }
 
     private var nextTierName: String {
@@ -736,5 +808,116 @@ private struct VerificationRow: View {
                 .padding(.trailing, 18)
         }
         .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Username Edit Sheet
+
+private struct UsernameEditSheet: View {
+    let current: String
+    let onSave: (String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var name: String
+
+    init(current: String, onSave: @escaping (String) -> Void) {
+        self.current = current
+        self.onSave = onSave
+        _name = State(initialValue: current)
+    }
+
+    private var isValid: Bool {
+        let t = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return t.count >= 2 && t.count <= 24
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.flockBG.ignoresSafeArea()
+
+                VStack(spacing: 28) {
+                    Spacer(minLength: 32)
+
+                    Image(systemName: "person.text.rectangle.fill")
+                        .font(.system(size: 56, weight: .thin))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.flockPrimary, Color.flockSecondary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+
+                    VStack(spacing: 8) {
+                        Text("Choose Your Handle")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.flockText)
+                        Text("This is how you appear on The Watchlist.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color.flockTextSub)
+                    }
+
+                    GlassCard(cornerRadius: 16) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("USERNAME")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Color.flockTextSub)
+                                .tracking(1.5)
+                                .padding(.horizontal, 18)
+                                .padding(.top, 16)
+
+                            Divider().background(Color.white.opacity(0.07))
+
+                            TextField("e.g. NightOwl_ATL", text: $name)
+                                .font(.system(size: 17, weight: .medium, design: .rounded))
+                                .foregroundStyle(Color.flockText)
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 14)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+
+                    HStack {
+                        Text("\(name.trimmingCharacters(in: .whitespacesAndNewlines).count)/24")
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(isValid ? Color.flockTextSub.opacity(0.5) : Color.flockAlert)
+                        Spacer()
+                        Text("2–24 characters")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.flockTextSub.opacity(0.5))
+                    }
+                    .padding(.horizontal, 24)
+
+                    Button {
+                        onSave(name)
+                        dismiss()
+                    } label: {
+                        Text("Save Handle")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(Color.flockBG)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(isValid ? Color.flockPrimary : Color.flockTextSub.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                    }
+                    .disabled(!isValid)
+                    .padding(.horizontal, 20)
+
+                    Spacer()
+                }
+            }
+            .navigationTitle("Your Handle")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundStyle(Color.flockTextSub)
+                }
+            }
+            .preferredColorScheme(.dark)
+        }
     }
 }

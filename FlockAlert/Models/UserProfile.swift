@@ -11,8 +11,9 @@ final class UserProfile {
     var camerasReported: Int
     var photosUploaded: Int
     var joinDate: Date
+    var isGuest: Bool = false
 
-    init(appleUserID: String, displayName: String, email: String? = nil) {
+    init(appleUserID: String, displayName: String, email: String? = nil, isGuest: Bool = false) {
         self.id = UUID()
         self.appleUserID = appleUserID
         self.displayName = displayName
@@ -21,6 +22,7 @@ final class UserProfile {
         self.camerasReported = 0
         self.photosUploaded = 0
         self.joinDate = Date()
+        self.isGuest = isGuest
     }
 
     // Badge system

@@ -11,6 +11,7 @@ struct MapView: View {
 
     @State private var selectedCamera: Camera?
     @State private var showFilters = false
+    @State private var showZoomHint = true
 
     var body: some View {
         ZStack {
@@ -32,6 +33,31 @@ struct MapView: View {
                 .padding(.horizontal, 16)
 
                 Spacer()
+            }
+
+            // ── Zoom hint ──────────────────────────────────────────────
+            if viewModel.isClusterMode && showZoomHint {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Image(systemName: "plus.magnifyingglass")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text("Zoom in to see individual cameras")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .padding(.bottom, 100)
+                }
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+                .allowsHitTesting(false)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+                        withAnimation(.easeOut(duration: 0.5)) { showZoomHint = false }
+                    }
+                }
             }
 
             // ── Detail Sheet ──────────────────────────────────────────
@@ -119,6 +145,9 @@ struct MapView: View {
         }
         .onMapCameraChange(frequency: .onEnd) { ctx in
             viewModel.refreshForRegion(ctx.region)
+            if !viewModel.isClusterMode {
+                withAnimation(.easeOut(duration: 0.3)) { showZoomHint = false }
+            }
         }
     }
 }
@@ -135,6 +164,9 @@ struct MapHeaderBar: View {
     let onToggleStyle: () -> Void
 
     private var countLabel: String {
+        if case .syncing = syncState {
+            return "loading cameras"
+        }
         if isClusterMode {
             return "zoom to load"
         }
@@ -163,9 +195,15 @@ struct MapHeaderBar: View {
 
             GlassCard {
                 HStack(spacing: 5) {
-                    Circle()
-                        .fill(syncState == .syncing ? Color.flockCaution : Color.flockSafe)
-                        .frame(width: 6, height: 6)
+                    if case .syncing = syncState {
+                        ProgressView()
+                            .scaleEffect(0.5)
+                            .frame(width: 12, height: 12)
+                    } else {
+                        Circle()
+                            .fill(Color.flockSafe)
+                            .frame(width: 6, height: 6)
+                    }
                     Text(countLabel)
                         .font(.system(size: 12, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color.flockText)

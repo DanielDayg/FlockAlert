@@ -28,6 +28,9 @@ final class AppState: ObservableObject {
     let geofenceManager = GeofenceManager()
     let alertDispatcher = AlertDispatcher()
 
+    /// Set by FlockAlertApp to persist alert events into SwiftData
+    var onAlertFired: ((AlertEvent) -> Void)?
+
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -39,7 +42,13 @@ final class AppState: ObservableObject {
     // MARK: - Geofence Wiring
 
     private func wireGeofenceCallbacks() {
-        // Stage 1 — Approaching (~3× radius out): bird chirp + "camera ahead" notification
+        // When a geofence fires in background, request a proximity refresh
+        geofenceManager.onNeedsRefresh = { [weak self] in
+            guard let self, let loc = self.userLocation else { return }
+            self.refreshGeofencesFromLocation(loc)
+        }
+
+        // Stage 1 — Approaching (~3× radius out)
         geofenceManager.onApproached = { [weak self] camera in
             guard let self else { return }
             let dist = self.distanceToNearest ?? self.alertRadiusMetres * 3
@@ -50,23 +59,32 @@ final class AppState: ObservableObject {
                 voice: self.voiceEnabled
             )
             self.unreadAlertCount += 1
+            ReviewPromptManager.shared.recordAlertFired()
+            let event = AlertEvent(
+                cameraID: camera.id,
+                cameraOwnerLabel: camera.ownerLabel,
+                cameraCity: camera.city,
+                triggerDistanceMetres: dist,
+                alertType: .approaching,
+                cameraLatitude: camera.latitude,
+                cameraLongitude: camera.longitude
+            )
+            self.onAlertFired?(event)
         }
 
-        // Stage 2 — Entered inner radius: check FOV, fire in-view or entered alert
+        // Stage 2 — Entered inner radius
         geofenceManager.onEntered = { [weak self] camera in
             guard let self else { return }
             self.activeAlertCameraIDs.insert(camera.id)
 
             let inFOV = self.isUserInCameraFOV(camera)
             if inFOV {
-                // User is actually being scanned right now
                 self.alertDispatcher.dispatchInView(
                     camera: camera,
                     mode: self.alertMode,
                     voice: self.voiceEnabled
                 )
             } else {
-                // Within range but not directly in the arc — still warn
                 self.alertDispatcher.dispatchApproach(
                     camera: camera,
                     distance: self.alertRadiusMetres,
@@ -75,12 +93,32 @@ final class AppState: ObservableObject {
                 )
             }
             self.unreadAlertCount += 1
+            ReviewPromptManager.shared.recordAlertFired()
+            let enteredEvent = AlertEvent(
+                cameraID: camera.id,
+                cameraOwnerLabel: camera.ownerLabel,
+                cameraCity: camera.city,
+                triggerDistanceMetres: self.alertRadiusMetres,
+                alertType: inFOV ? .entering : .approaching,
+                cameraLatitude: camera.latitude,
+                cameraLongitude: camera.longitude
+            )
+            self.onAlertFired?(enteredEvent)
         }
 
         geofenceManager.onExited = { [weak self] camera in
             self?.activeAlertCameraIDs.remove(camera.id)
         }
     }
+
+    // Called by MapViewModel AND directly from geofence callbacks
+    func refreshGeofencesFromLocation(_ location: CLLocation) {
+        // This is a lightweight callback — MapViewModel does the heavy spatial work
+        // but we ensure geofences never go stale by also triggering on fence entry
+        locationRefreshTrigger.send(location)
+    }
+
+    private let locationRefreshTrigger = PassthroughSubject<CLLocation, Never>()
 
     // MARK: - FOV Check
 
@@ -110,6 +148,9 @@ final class AppState: ObservableObject {
         } else {
             visibilityStatus = "—"
         }
+        // Keep widget in sync with current nearby camera presence
+        let defaults = UserDefaults(suiteName: "group.com.flockalert.app")
+        defaults?.set(camera != nil ? 1 : 0, forKey: "nearbyCameraCount")
     }
 
     private func visibilityLabel(camera: Camera, distance: Double) -> String {

@@ -4,6 +4,7 @@ struct ProximityBannerView: View {
     let camera: Camera
     let distance: Double
     let visibility: String
+    var onDismiss: (() -> Void)? = nil
 
     @State private var pulse = false
 
@@ -61,6 +62,18 @@ struct ProximityBannerView: View {
                         .font(.system(size: 12, weight: .black, design: .monospaced))
                         .foregroundStyle(statusColor)
                 }
+
+                // Dismiss button
+                Button {
+                    onDismiss?()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color.flockTextSub)
+                        .padding(8)
+                        .background(Color.white.opacity(0.07), in: Circle())
+                }
+                .padding(.leading, 4)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
