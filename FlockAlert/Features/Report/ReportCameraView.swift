@@ -41,6 +41,31 @@ struct ReportCameraView: View {
                 ScrollView {
                     VStack(spacing: 20) {
 
+                        // ── One-tap quick report ─────────────────────────
+                        Button(action: quickSubmit) {
+                            HStack(spacing: 12) {
+                                Image(systemName: "bolt.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(Color.flockBG)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Camera here — one tap")
+                                        .font(.system(size: 15, weight: .bold))
+                                        .foregroundStyle(Color.flockBG)
+                                    Text("Reports at your location & flags it on OpenStreetMap")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(Color.flockBG.opacity(0.85))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                Spacer()
+                            }
+                            .padding(14)
+                            .background(Color.flockPrimary)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(appState.userLocation == nil || isSubmitting)
+                        .opacity(appState.userLocation == nil ? 0.5 : 1)
+
                         // ── Section 1: Location ──────────────────────────
                         ReportSectionCard(
                             number: "1",
@@ -360,13 +385,44 @@ struct ReportCameraView: View {
         HapticManager.impact(.medium)
 
         let photoData = photoImages.compactMap { $0.jpegData(compressionQuality: 0.8) }
+        persistReport(coord: coord, ownerType: selectedOwner,
+                      notes: notes.isEmpty ? nil : notes, photoData: photoData)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            isSubmitting = false
+            showSuccess = true
+        }
+    }
+
+    /// One-tap report at the user's current GPS location — no map pinning, photo, or
+    /// details needed. For when you spot a camera while driving and just need it flagged.
+    private func quickSubmit() {
+        guard let coord = appState.userLocation?.coordinate else {
+            locationError = "Location unavailable — enable GPS to quick-report."
+            return
+        }
+        isSubmitting = true
+        HapticManager.impact(.medium)
+
+        persistReport(coord: coord, ownerType: .unknown, notes: nil, photoData: [])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            isSubmitting = false
+            showSuccess = true
+        }
+    }
+
+    /// Saves the report locally, pings the owner, and contributes an OSM Note so
+    /// OpenStreetMap mappers can verify and add the camera upstream.
+    private func persistReport(coord: CLLocationCoordinate2D, ownerType: OwnerType,
+                               notes: String?, photoData: [Data]) {
         let report = CameraReport(
             latitude: coord.latitude,
             longitude: coord.longitude,
             reportType: .newCamera,
-            ownerType: selectedOwner,
+            ownerType: ownerType,
             mountType: .unknown,
-            notes: notes.isEmpty ? nil : notes,
+            notes: notes,
             photoData: photoData
         )
         modelContext.insert(report)
@@ -375,14 +431,19 @@ struct ReportCameraView: View {
         ReportNotificationService.shared.notifyCameraReport(
             latitude: coord.latitude,
             longitude: coord.longitude,
-            ownerType: selectedOwner.rawValue,
-            notes: notes.isEmpty ? nil : notes,
-            photoCount: photoImages.count
+            ownerType: ownerType.rawValue,
+            notes: notes,
+            photoCount: photoData.count
         )
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            isSubmitting = false
-            showSuccess = true
+        // Contribute back to OpenStreetMap as a Note (best-effort, non-blocking).
+        Task {
+            await OSMNotesService.shared.submitCameraNote(
+                latitude: coord.latitude,
+                longitude: coord.longitude,
+                ownerType: ownerType == .unknown ? nil : ownerType.rawValue,
+                notes: notes
+            )
         }
     }
 

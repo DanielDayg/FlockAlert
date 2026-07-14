@@ -18,8 +18,11 @@ struct OverpassAPIClient {
 
     private var session: URLSession = {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 60
-        config.timeoutIntervalForResource = 90
+        // Fail fast: this data loads while the user watches the map. A mirror that
+        // hasn't answered in ~18s isn't worth waiting on — another mirror (queried
+        // in parallel) has almost certainly already responded.
+        config.timeoutIntervalForRequest = 18
+        config.timeoutIntervalForResource = 25
         config.httpAdditionalHeaders = [
             "User-Agent": "FlockAlert/1.0 (iOS privacy transparency app; contact@flockalert.app)",
             "Accept": "application/json"
@@ -46,7 +49,7 @@ struct OverpassAPIClient {
     private func buildQuery(region: MapRegion) -> String {
         let bbox = "\(region.south),\(region.west),\(region.north),\(region.east)"
         return """
-        [out:json][timeout:55][bbox:\(bbox)];
+        [out:json][timeout:20][bbox:\(bbox)];
         (
           node["surveillance"="camera"]["operator"~"[Ff]lock",i];
           node["surveillance"="camera"]["brand"~"[Ff]lock",i];
@@ -60,7 +63,7 @@ struct OverpassAPIClient {
 
     private func buildAroundQuery(coordinate: CLLocationCoordinate2D, radius: Double) -> String {
         return """
-        [out:json][timeout:55];
+        [out:json][timeout:20];
         (
           node["surveillance"="camera"]["operator"~"[Ff]lock",i](around:\(Int(radius)),\(coordinate.latitude),\(coordinate.longitude));
           node["surveillance:type"="ALPR"](around:\(Int(radius)),\(coordinate.latitude),\(coordinate.longitude));
@@ -74,28 +77,41 @@ struct OverpassAPIClient {
     // MARK: - Network
 
     private func fetch(query: String) async throws -> [OverpassCamera] {
-        var lastError: Error = OverpassError.noEndpointAvailable
-
-        // Two passes over the mirrors. The public Overpass API frequently returns
-        // 429 (rate limit) or 504 (timeout) under load — but a mirror that's
-        // momentarily throttled usually recovers within a second or two. Without
-        // this retry, a single bad response meant zero cameras in busy cities
-        // (New York, San Francisco, etc.).
+        // Race all mirrors at once and take the first that answers. Querying them
+        // sequentially (the old approach) meant one slow/throttled mirror could
+        // stall a city load for over a minute before the next was even tried.
+        // Firing them together returns as soon as the fastest healthy mirror
+        // responds — typically a few seconds. One retry pass covers the case where
+        // every mirror is momentarily rate-limited (429/504), which recovers fast.
         for attempt in 0..<2 {
-            for endpoint in endpoints {
-                do {
-                    return try await fetch(query: query, endpoint: endpoint)
-                } catch {
-                    lastError = error
-                    // Try next mirror.
-                }
+            if let cameras = await raceMirrors(query: query) {
+                return cameras
             }
             if attempt == 0 {
-                // Brief backoff before the retry pass.
-                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
             }
         }
-        throw lastError
+        throw OverpassError.noEndpointAvailable
+    }
+
+    /// Queries every mirror concurrently and returns the first successful result,
+    /// cancelling the rest. Returns nil only if all mirrors failed.
+    private func raceMirrors(query: String) async -> [OverpassCamera]? {
+        await withTaskGroup(of: [OverpassCamera]?.self) { group in
+            for endpoint in endpoints {
+                group.addTask {
+                    // Swallow per-mirror failures so one bad mirror doesn't end the race.
+                    try? await fetch(query: query, endpoint: endpoint)
+                }
+            }
+            for await result in group {
+                if let cameras = result {
+                    group.cancelAll()
+                    return cameras
+                }
+            }
+            return nil
+        }
     }
 
     private func fetch(query: String, endpoint: String) async throws -> [OverpassCamera] {

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0091793945F6F8B259F3C83A /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6961146C3485AD9A8A78A5A /* Camera.swift */; };
+		0DF5863612E90E86A60BA37A /* OSMNotesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360FFAD03F24BE9E6E1E2662 /* OSMNotesService.swift */; };
 		0F2AA5C4AE3216253C036BAD /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2CD7CD13482061C93AECA2D /* HapticManager.swift */; };
 		1080B7AEA2FD419E7D935BB1 /* GeofenceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DCEB09B43AA6463EE39A20C /* GeofenceManager.swift */; };
 		20C974D3BB98A4E451A719D6 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7DD936BD6E4ABD8BD3DAF14 /* Theme.swift */; };
@@ -27,6 +28,7 @@
 		5C6F1A3135D06B2DE79C3CF0 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EF2C41C3BD68C469DE68BB0 /* MapView.swift */; };
 		5D843CCE60D4B29F67E7056E /* SeedCameras.json in Resources */ = {isa = PBXBuildFile; fileRef = 551FC9D1CA3DFFE4DD52E80E /* SeedCameras.json */; };
 		600A48F327D386A1A0F5A9DF /* PromoCodeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD21FA743D9645EE1DD0A6B5 /* PromoCodeManager.swift */; };
+		6198A604D4024CF211735266 /* DonationPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8FD4A9C1C0E5931CA9E5312 /* DonationPromptManager.swift */; };
 		659BC89AA49947F30D9C1BB1 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E0B5025024888ED787FBA7C /* SettingsView.swift */; };
 		664488E0CA1A71EACBF2405B /* FlockAlertWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B81B388A8B0F0D9789211A9F /* FlockAlertWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		678A1E31274746E560A4EA31 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61543DFF53E235DCB2437A0 /* ContentView.swift */; };
@@ -54,6 +56,7 @@
 		CE3C13F46C113583C5661424 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8CDA60CE5363E0558BFAA6 /* AppState.swift */; };
 		CFA6A20DFEED72070F8C5963 /* CityClusterPin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7CAD4DF4CA3CA59CE4C199E /* CityClusterPin.swift */; };
 		D040593A4708D995DF697312 /* FlockAlertWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E17D1AD1E73875D2E55C2A83 /* FlockAlertWidget.swift */; };
+		D7835961E6C52A837FB8B0AE /* SurveillanceShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4456FFFB5455C75D50887022 /* SurveillanceShareCard.swift */; };
 		DA337539ABD3831F3C898CB7 /* ReviewPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2942972C9624E54685733E9 /* ReviewPromptManager.swift */; };
 		DBFDB6C113E1AE3A06713F0B /* ArticleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F6D9643B25B278B7784A0E /* ArticleView.swift */; };
 		DDFB9E4D92DF432B55D9239F /* LearnContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E3A6A4BA9300CE63051BD88 /* LearnContent.swift */; };
@@ -98,10 +101,12 @@
 		24DF8EC22404EC0404145A64 /* CameraVerifySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraVerifySheet.swift; sourceTree = "<group>"; };
 		29CD94E6C225BDF941B70C90 /* BannedCitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannedCitiesView.swift; sourceTree = "<group>"; };
 		34A32918724CCC32796F1054 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		360FFAD03F24BE9E6E1E2662 /* OSMNotesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OSMNotesService.swift; sourceTree = "<group>"; };
 		39BFF38195E3B0B1510BAC35 /* AlertSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSettingsView.swift; sourceTree = "<group>"; };
 		3E0B5025024888ED787FBA7C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3F28C136ED1FC2F572805E62 /* CameraPin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPin.swift; sourceTree = "<group>"; };
 		439443F019FFA8E8D3F528AD /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		4456FFFB5455C75D50887022 /* SurveillanceShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurveillanceShareCard.swift; sourceTree = "<group>"; };
 		50ED8D3664BBDC232F0F1E29 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
 		551FC9D1CA3DFFE4DD52E80E /* SeedCameras.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = SeedCameras.json; sourceTree = "<group>"; };
 		559808D56EB63A5C2E432F83 /* ProPaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProPaywallView.swift; sourceTree = "<group>"; };
@@ -141,6 +146,7 @@
 		E3D30E1497E403DD34DA7E16 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
 		E4268C0306608A517E720DA3 /* OverpassAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverpassAPIClient.swift; sourceTree = "<group>"; };
 		E6FCA822FC88B8C4C6A45F73 /* FlockAlertWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FlockAlertWidget.entitlements; sourceTree = "<group>"; };
+		E8FD4A9C1C0E5931CA9E5312 /* DonationPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationPromptManager.swift; sourceTree = "<group>"; };
 		ED22706990AA6BE3AC2C6E06 /* FilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
 		EE1B1CB74382811DA8D23D39 /* BirdChirpPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirdChirpPlayer.swift; sourceTree = "<group>"; };
 		F2942972C9624E54685733E9 /* ReviewPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptManager.swift; sourceTree = "<group>"; };
@@ -293,8 +299,10 @@
 				F5E8574F2B74DDCFE61137DB /* AlertDispatcher.swift */,
 				F75981CC5E5FB494AADB69D1 /* AuthManager.swift */,
 				EE1B1CB74382811DA8D23D39 /* BirdChirpPlayer.swift */,
+				E8FD4A9C1C0E5931CA9E5312 /* DonationPromptManager.swift */,
 				1DCEB09B43AA6463EE39A20C /* GeofenceManager.swift */,
 				34A32918724CCC32796F1054 /* LocationManager.swift */,
+				360FFAD03F24BE9E6E1E2662 /* OSMNotesService.swift */,
 				E4268C0306608A517E720DA3 /* OverpassAPIClient.swift */,
 				CD21FA743D9645EE1DD0A6B5 /* PromoCodeManager.swift */,
 				96F0A2B9F49A1E4C68E92715 /* ReportNotificationService.swift */,
@@ -376,6 +384,7 @@
 			isa = PBXGroup;
 			children = (
 				D22D870062E1BBC5D507CE34 /* DonationView.swift */,
+				4456FFFB5455C75D50887022 /* SurveillanceShareCard.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -503,6 +512,7 @@
 				B931D3E06C34B167E7BFC336 /* CameraVerifySheet.swift in Sources */,
 				CFA6A20DFEED72070F8C5963 /* CityClusterPin.swift in Sources */,
 				678A1E31274746E560A4EA31 /* ContentView.swift in Sources */,
+				6198A604D4024CF211735266 /* DonationPromptManager.swift in Sources */,
 				AA02C6305FB9494CE2888FD8 /* DonationView.swift in Sources */,
 				5C0B990F6DE0C096FB6C2FFA /* FilterView.swift in Sources */,
 				464CB7A3D82CDDBB2CABC75A /* FlockAlertApp.swift in Sources */,
@@ -516,6 +526,7 @@
 				FC6830ACF7B7FB3381DE4C61 /* LocationManager.swift in Sources */,
 				5C6F1A3135D06B2DE79C3CF0 /* MapView.swift in Sources */,
 				EE5B1A446FFE6E3C3D2B13A9 /* MapViewModel.swift in Sources */,
+				0DF5863612E90E86A60BA37A /* OSMNotesService.swift in Sources */,
 				6932E133DC7F332E9DA024AF /* OnboardingView.swift in Sources */,
 				5232C87D00F178092F90A1D2 /* OverpassAPIClient.swift in Sources */,
 				33D1F0EC71FF8CEB6899C54A /* ProPaywallView.swift in Sources */,
@@ -528,6 +539,7 @@
 				90E3B333F020866DB465045B /* RouteView.swift in Sources */,
 				659BC89AA49947F30D9C1BB1 /* SettingsView.swift in Sources */,
 				7B96CC0C0007824A10D13EEA /* SubscriptionManager.swift in Sources */,
+				D7835961E6C52A837FB8B0AE /* SurveillanceShareCard.swift in Sources */,
 				9FD0330DCF80885352D0BDD0 /* SyncManager.swift in Sources */,
 				20C974D3BB98A4E451A719D6 /* Theme.swift in Sources */,
 				348B445F01C3A9CD7C0E6BE8 /* UpdateChecker.swift in Sources */,

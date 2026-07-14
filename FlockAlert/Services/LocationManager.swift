@@ -47,11 +47,22 @@ final class LocationManager: NSObject, ObservableObject {
     }
 
     @objc private func appDidEnterBackground() {
+        // Compass only feeds the on-screen map arrow — no point running it hidden.
         manager.stopUpdatingHeading()
+        // Drop to low-power location while backgrounded. The live map isn't visible,
+        // and camera alerts fire from geofences (which are independent of this
+        // accuracy), so coarse tracking here is plenty for refreshing nearby fences
+        // and saves significant battery vs. ten-metre precision.
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = 100
     }
 
     @objc private func appWillEnterForeground() {
-        if isAuthorized { manager.startUpdatingHeading() }
+        guard isAuthorized else { return }
+        manager.startUpdatingHeading()
+        // Back to precise for the live map + "camera ahead" distance readout.
+        manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        manager.distanceFilter = 20
     }
 
     var authorizationStatus: CLAuthorizationStatus { manager.authorizationStatus }

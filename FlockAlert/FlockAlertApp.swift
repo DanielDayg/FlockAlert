@@ -87,8 +87,10 @@ struct FlockAlertApp: App {
 struct RootView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @State private var showOnboarding = !UserDefaults.standard.bool(forKey: "onboardingComplete")
     @StateObject private var updateChecker = UpdateChecker.shared
+    @StateObject private var donationPrompt = DonationPromptManager.shared
 
     var body: some View {
         ZStack {
@@ -115,6 +117,23 @@ struct RootView: View {
                 .zIndex(10)
             }
         }
+        // Auto-surface the donation screen after a couple of minutes, every
+        // other session — so users don't have to dig through Settings to find it.
+        .sheet(isPresented: $donationPrompt.shouldShow) {
+            DonationView()
+                .environmentObject(SubscriptionManager.shared)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            switch phase {
+            case .active:
+                // Don't interrupt first-run onboarding.
+                if !showOnboarding { donationPrompt.appBecameActive() }
+            case .inactive, .background:
+                donationPrompt.appResignedActive()
+            @unknown default:
+                break
+            }
+        }
         .task {
             await updateChecker.check()
         }
@@ -131,6 +150,9 @@ struct RootView: View {
                 defaults?.set(stored + 1, forKey: "weeklyCameraCount")
             }
             WeeklyReportManager.configure()
+            // Kick off the donation-prompt timer on cold launch (scenePhase's
+            // initial .active doesn't always trigger onChange).
+            if !showOnboarding { donationPrompt.appBecameActive() }
         }
         .task {
             await requestNotificationPermission()

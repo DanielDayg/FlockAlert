@@ -1,12 +1,14 @@
 import SwiftUI
 import SwiftData
 import RevenueCatUI
+import CoreLocation
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var authManager: AuthManager
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openURL) private var openURL
     @Query private var cameras: [Camera]
     @Query private var reports: [CameraReport]
 
@@ -18,8 +20,29 @@ struct SettingsView: View {
     @State private var showDonation = false
     @State private var showCustomerCenter = false
     @State private var showDeleteAccountConfirm = false
+    @State private var shareCardImage: UIImage?
+    @State private var showShareSheet = false
 
     let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+
+    /// Radius used for the shareable "surveillance near me" card.
+    private let shareRadiusMiles = 2
+
+    /// Count of active cameras within `shareRadiusMiles` of the user. Returns nil when
+    /// location is unavailable — we must never share a "within 2 miles" figure computed
+    /// from anything other than the user's actual location.
+    private func camerasNearMe() -> Int? {
+        guard let loc = appState.userLocation else { return nil }
+        let radiusMetres = Double(shareRadiusMiles) * 1609.34
+        return cameras.filter { $0.isActive && loc.distance(from: $0.clLocation) <= radiusMetres }.count
+    }
+
+    private func shareSurveillanceCard() {
+        guard let count = camerasNearMe(),
+              let img = renderSurveillanceCard(count: count, radiusMiles: shareRadiusMiles) else { return }
+        shareCardImage = img
+        showShareSheet = true
+    }
 
     var body: some View {
         NavigationStack {
@@ -78,6 +101,39 @@ struct SettingsView: View {
                             .listRowBackground(Color.flockPrimary.opacity(0.08))
                         }
                     }
+
+                    // ── Spread the word ──────────────────────────────
+                    Section {
+                        Button {
+                            shareSurveillanceCard()
+                        } label: {
+                            SettingsRow(icon: "square.and.arrow.up.fill", label: "Share surveillance near me",
+                                        sub: appState.userLocation == nil
+                                            ? "Enable location to see what's near you"
+                                            : "Post the cameras tracking your area",
+                                        color: .flockPrimary)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(appState.userLocation == nil)
+                        .opacity(appState.userLocation == nil ? 0.5 : 1)
+
+                        Button {
+                            // Opens the App Store review sheet directly. Apple's rules
+                            // forbid asking for a specific star count, so we simply
+                            // invite a rating and let users decide.
+                            if let url = URL(string: "itms-apps://apps.apple.com/app/id6774017307?action=write-review") {
+                                openURL(url)
+                            }
+                        } label: {
+                            SettingsRow(icon: "star.fill", label: "Rate Flock Alert",
+                                        sub: "A quick review helps others find it",
+                                        color: .flockCaution)
+                        }
+                        .buttonStyle(.plain)
+                    } header: {
+                        ListHeader("SPREAD THE WORD")
+                    }
+                    .listRowBackground(Color.flockSurface)
 
                     // ── Status Card ──────────────────────────────────
                     Section {
@@ -203,6 +259,9 @@ struct SettingsView: View {
         .sheet(isPresented: $showPrivacyPolicy) { PrivacyPolicyView() }
         .sheet(isPresented: $showDisclaimer) { DisclaimerView() }
         .sheet(isPresented: $showAbout) { AboutView() }
+        .sheet(isPresented: $showShareSheet) {
+            if let img = shareCardImage { ShareSheet(items: [img]) }
+        }
         .confirmationDialog("Clear Alert History?", isPresented: $showClearConfirm, titleVisibility: .visible) {
             Button("Clear All Alerts", role: .destructive) { clearAlerts() }
             Button("Cancel", role: .cancel) {}
