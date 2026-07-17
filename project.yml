@@ -57,8 +57,8 @@ targets:
         CFBundleName: Flock Alert
         CFBundleDisplayName: Flock Alert
         CFBundleIdentifier: com.flockalert.app
-        CFBundleShortVersionString: "1.3.0"
-        CFBundleVersion: "14"
+        CFBundleShortVersionString: "1.3.1"
+        CFBundleVersion: "15"
         LSRequiresIPhoneOS: true
         # NOTE: do NOT require "gps" here — WiFi-only iPads lack a GPS receiver, so
         # requiring it blocks installation on those devices and gets the app rejected
@@ -128,8 +128,8 @@ targets:
         CFBundleName: FlockAlert Widget
         CFBundleDisplayName: FlockAlert Widget
         CFBundleIdentifier: com.flockalert.app.widget
-        CFBundleShortVersionString: "1.3.0"
-        CFBundleVersion: "14"
+        CFBundleShortVersionString: "1.3.1"
+        CFBundleVersion: "15"
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
