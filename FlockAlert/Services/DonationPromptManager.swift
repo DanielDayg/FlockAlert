@@ -21,9 +21,9 @@ final class DonationPromptManager: ObservableObject {
     }
 
     /// Foreground time before the prompt appears.
-    private let delay: TimeInterval = 120          // 2 minutes
-    /// Fire on every Nth launch (2 = every other time the app is opened).
-    private let everyNLaunches = 2
+    private let delay: TimeInterval = 5
+    /// Fire on every Nth launch (3 = every third time the app is opened).
+    private let everyNLaunches = 3
 
     private var pending: Task<Void, Never>?
     private var countedThisLaunch = false

@@ -12,6 +12,7 @@ struct MapView: View {
     @State private var selectedCamera: Camera?
     @State private var showFilters = false
     @State private var showZoomHint = true
+    @State private var showDonation = false
 
     var body: some View {
         ZStack {
@@ -27,7 +28,8 @@ struct MapView: View {
                     isClusterMode: viewModel.isClusterMode,
                     syncState: viewModel.syncState,
                     onFilter: { showFilters = true },
-                    onToggleStyle: { viewModel.cycleMapStyle() }
+                    onToggleStyle: { viewModel.cycleMapStyle() },
+                    onSupport: { showDonation = true }
                 )
                 .padding(.top, 56)
                 .padding(.horizontal, 16)
@@ -78,6 +80,9 @@ struct MapView: View {
         }
         .sheet(isPresented: $showFilters) {
             FilterView(filters: $viewModel.activeFilters) { viewModel.applyFilters() }
+        }
+        .sheet(isPresented: $showDonation) {
+            DonationView().environmentObject(SubscriptionManager.shared)
         }
         .onAppear {
             viewModel.setup(appState: appState, modelContext: modelContext)
@@ -162,6 +167,7 @@ struct MapHeaderBar: View {
     let syncState: SyncState
     let onFilter: () -> Void
     let onToggleStyle: () -> Void
+    let onSupport: () -> Void
 
     private var countLabel: String {
         if case .syncing = syncState {
@@ -178,20 +184,26 @@ struct MapHeaderBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            GlassCard {
-                HStack(spacing: 6) {
-                    Image(systemName: "eye.trianglebadge.exclamationmark")
-                        .foregroundStyle(Color.flockPrimary)
-                        .font(.system(size: 14, weight: .semibold))
-                    Text("FLOCK ALERT")
-                        .font(.system(size: 12, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.flockPrimary)
+            Button(action: onSupport) {
+                GlassCard {
+                    HStack(spacing: 6) {
+                        Image(systemName: "heart.fill")
+                            .foregroundStyle(Color.flockPrimary)
+                            .font(.system(size: 12, weight: .bold))
+                        Text("Keep Flock Alert Free!")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.flockPrimary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
             }
+            .buttonStyle(.plain)
+            .layoutPriority(1)
 
-            Spacer()
+            Spacer(minLength: 6)
 
             GlassCard {
                 HStack(spacing: 5) {
