@@ -58,7 +58,7 @@ final class UpdateChecker: ObservableObject {
 
         let content = UNMutableNotificationContent()
         content.title = "Flock Alert update available"
-        content.body = "A newer version is ready — it's now free. Tap to update."
+        content.body = "A new version is ready with fresh features. Tap to update."
         content.sound = .default
 
         let request = UNNotificationRequest(

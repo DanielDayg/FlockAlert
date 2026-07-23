@@ -35,6 +35,7 @@
 		6932E133DC7F332E9DA024AF /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFCB41C57ABD1ED175605F5A /* OnboardingView.swift */; };
 		69969444DF1069D6F7A27DCD /* CameraDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15D5D3AC2AACF10792CDBAB6 /* CameraDetailSheet.swift */; };
 		6BC553DD3DFF5DCE64950753 /* AlertSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39BFF38195E3B0B1510BAC35 /* AlertSettingsView.swift */; };
+		6D481E10322F21CE110FDC85 /* HaveIBeenFlockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC12DA15C949BE07FD5DE370 /* HaveIBeenFlockedView.swift */; };
 		768A87B32376350A4F1D80D8 /* CameraReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAED6CA04DB450CB630EBD42 /* CameraReport.swift */; };
 		775456F42CF8706A2033A027 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439443F019FFA8E8D3F528AD /* GlassCard.swift */; };
 		7B96CC0C0007824A10D13EEA /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3D30E1497E403DD34DA7E16 /* SubscriptionManager.swift */; };
@@ -141,6 +142,7 @@
 		D22D870062E1BBC5D507CE34 /* DonationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DonationView.swift; sourceTree = "<group>"; };
 		D6FCF1AE43BCAE30ED732DC1 /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 		D7C8D1C705683AE572A95B88 /* LearnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnView.swift; sourceTree = "<group>"; };
+		DC12DA15C949BE07FD5DE370 /* HaveIBeenFlockedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HaveIBeenFlockedView.swift; sourceTree = "<group>"; };
 		DEB284EF67F83115A5F7746A /* FlockAlertProducts.storekit */ = {isa = PBXFileReference; path = FlockAlertProducts.storekit; sourceTree = "<group>"; };
 		E17D1AD1E73875D2E55C2A83 /* FlockAlertWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlockAlertWidget.swift; sourceTree = "<group>"; };
 		E3D30E1497E403DD34DA7E16 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
@@ -173,6 +175,7 @@
 		0482FD49F76EAC0B95C4F4B0 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				DC12DA15C949BE07FD5DE370 /* HaveIBeenFlockedView.swift */,
 				D1C97189479B5DB9F5EB7047 /* ProfileView.swift */,
 			);
 			path = Profile;
@@ -520,6 +523,7 @@
 				1080B7AEA2FD419E7D935BB1 /* GeofenceManager.swift in Sources */,
 				775456F42CF8706A2033A027 /* GlassCard.swift in Sources */,
 				0F2AA5C4AE3216253C036BAD /* HapticManager.swift in Sources */,
+				6D481E10322F21CE110FDC85 /* HaveIBeenFlockedView.swift in Sources */,
 				3E1D4F5933A1B56B01659F2B /* LeaderboardView.swift in Sources */,
 				DDFB9E4D92DF432B55D9239F /* LearnContent.swift in Sources */,
 				BC03638109830149A2440AA3 /* LearnView.swift in Sources */,

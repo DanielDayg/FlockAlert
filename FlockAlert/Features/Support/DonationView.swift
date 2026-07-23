@@ -1,4 +1,6 @@
 import SwiftUI
+import SwiftData
+import CoreLocation
 import RevenueCat
 
 /// Voluntary "keep it free" support screen. Every feature in Flock Alert is free —
@@ -6,7 +8,20 @@ import RevenueCat
 /// The slider snaps to the real donation tiers configured in RevenueCat.
 struct DonationView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @Query private var cameras: [Camera]
+
+    /// Cameras within this radius (miles) count as "around you" for the support pitch.
+    private let nearbyRadiusMiles = 5.0
+
+    /// Active cameras near the user — the concrete "value" behind the ask.
+    /// Returns nil when we have no location fix (never fabricate a number).
+    private var nearbyCount: Int? {
+        guard let loc = appState.userLocation else { return nil }
+        let radiusMetres = nearbyRadiusMiles * 1609.34
+        return cameras.filter { $0.isActive && loc.distance(from: $0.clLocation) <= radiusMetres }.count
+    }
 
     /// Index into the sorted donation packages (snaps to real tiers).
     @State private var selection: Double = 0
@@ -37,8 +52,17 @@ struct DonationView: View {
         return "$\(fallbackAmounts[i])"
     }
 
-    /// Which tier index counts as the "most common" nudge (roughly the middle).
-    private var recommendedIndex: Int { hasRealTiers ? packages.count / 2 : 2 }
+    /// Which tier index counts as the "Most common" nudge. Anchored to the real
+    /// $2.99 tier people actually choose — NOT the middle of the range, which was
+    /// falsely flagging the ~$9.99 tier as "most common."
+    private var recommendedIndex: Int {
+        guard hasRealTiers else { return 1 }  // fallbackAmounts index 1 == $3
+        let target = 2.99
+        return packages.enumerated().min {
+            abs(($0.element.storeProduct.price as NSDecimalNumber).doubleValue - target)
+                < abs(($1.element.storeProduct.price as NSDecimalNumber).doubleValue - target)
+        }?.offset ?? (packages.count / 2)
+    }
 
     var body: some View {
         ZStack {
@@ -47,6 +71,7 @@ struct DonationView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     header
+                    valueBanner
                     amountBlock
                     slider
                     impactBlock
@@ -91,6 +116,37 @@ struct DonationView: View {
                 .padding(.horizontal, 8)
         }
         .padding(.bottom, 26)
+    }
+
+    /// The concrete "value" hook — how many cameras Flock Alert is showing the
+    /// user near them right now. Only appears when we have a real location fix.
+    @ViewBuilder
+    private var valueBanner: some View {
+        if let n = nearbyCount, n > 0 {
+            HStack(spacing: 12) {
+                Image(systemName: "eye.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Color.flockPrimary)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("\(n) camera\(n == 1 ? "" : "s") watching your area")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.flockText)
+                    Text("You can see them because Flock Alert is free.\nHelp keep it that way.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.flockTextSub)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(14)
+            .background(Color.flockPrimary.opacity(0.10))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .strokeBorder(Color.flockPrimary.opacity(0.25), lineWidth: 1)
+            )
+            .padding(.bottom, 20)
+        }
     }
 
     private var amountBlock: some View {
@@ -186,17 +242,32 @@ struct DonationView: View {
                     .multilineTextAlignment(.center)
             }
 
+            // One-time option — no subscription, no commitment. Opens Buy Me a Coffee.
             if let webURL = URL(string: AppConfiguration.webDonationURL), !AppConfiguration.webDonationURL.isEmpty {
-                Button {
-                    UIApplication.shared.open(webURL)
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "globe")
-                        Text("Prefer to give on the web?")
+                VStack(spacing: 6) {
+                    Button {
+                        UIApplication.shared.open(webURL)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text("☕️").font(.system(size: 17))
+                            Text("Buy me a coffee — one time")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(Color.flockPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Color.flockPrimary.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .strokeBorder(Color.flockPrimary.opacity(0.35), lineWidth: 1)
+                        )
                     }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color.flockPrimary)
+                    Text("No subscription — just a one-time thank-you 💙")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.flockTextSub.opacity(0.7))
                 }
+                .padding(.top, 2)
             }
 
             Button("Maybe later") { dismiss() }
@@ -206,19 +277,30 @@ struct DonationView: View {
     }
 
     private var footer: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundStyle(Color.flockPrimary)
-                Text("You'll get a Supporter badge on your profile")
-                    .foregroundStyle(Color.flockTextSub)
-            }
-            .font(.system(size: 12))
+        VStack(spacing: 8) {
+            perkRow("checkmark.seal.fill", "A Supporter badge on your profile")
+            perkRow("bubble.left.and.bubble.right.fill",
+                    "A direct line to the team — ideas, questions, or partnerships")
             Text("The app stays 100% free either way.")
                 .font(.system(size: 12))
                 .foregroundStyle(Color.flockTextSub.opacity(0.7))
+                .padding(.top, 2)
         }
         .padding(.top, 20)
+    }
+
+    private func perkRow(_ icon: String, _ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .foregroundStyle(Color.flockPrimary)
+                .frame(width: 18)
+            Text(text)
+                .foregroundStyle(Color.flockTextSub)
+                .multilineTextAlignment(.leading)
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 12))
+        .padding(.horizontal, 20)
     }
 
     private var thanksBanner: some View {

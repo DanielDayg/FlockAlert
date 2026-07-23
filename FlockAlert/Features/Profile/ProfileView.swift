@@ -14,6 +14,37 @@ struct ProfileView: View {
 
                 ScrollView {
                     VStack(spacing: 16) {
+                        // ── Have I Been Flocked? — headline feature ────────
+                        NavigationLink(destination: HaveIBeenFlockedView()) {
+                            GlassCard(cornerRadius: 16) {
+                                HStack(spacing: 14) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color.flockPrimary.opacity(0.15))
+                                            .frame(width: 44, height: 44)
+                                        Image(systemName: "eye.trianglebadge.exclamationmark.fill")
+                                            .font(.system(size: 20, weight: .semibold))
+                                            .foregroundStyle(Color.flockPrimary)
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("Have I Been Flocked?")
+                                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                            .foregroundStyle(Color.flockText)
+                                        Text("Check how exposed your plate is to the camera network")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(Color.flockTextSub)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Color.flockTextSub)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
                         // ── Route Planner — visible to everyone ────────────
                         NavigationLink(destination: RouteView()) {
                             GlassCard(cornerRadius: 16) {
